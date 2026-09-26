@@ -26,7 +26,7 @@ class Decision(BaseModel):
     type_probabilities: dict[str, float] | None = None
     severity_probabilities: dict[str, float] | None = None
     priority_probability: float | None = None
-    confidence_probabilities: dict[str, float] | None = None
+    confidence_parts: dict[str, float] | None = None  # {"type", "severity", "priority"}: the factors of `confidence`
     provider: Literal["jev", "rules"]
     notes: list[str] = Field(default_factory=list)
     latency_ms: int = 0

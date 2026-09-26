@@ -4,6 +4,10 @@ Jev answers closed questions about a text state and returns probability
 distributions. It never sees raw numbers from the CSV: the state is the
 pre-computed, verbalized English evidence. Default route is OpenRouter's
 TypeSafe-compatible endpoint; any TypeSafe-compatible base URL works.
+
+Following TypeSafe's guidance ("one atomic question per judgment, combine the
+answers in code"), three questions are asked in one request and the anomaly's
+confidence is composed in code from the per-question certainty Jev reports.
 """
 from __future__ import annotations
 
@@ -42,19 +46,7 @@ QUESTIONS = {
         ],
     ),
     "priority": Noul(instructions="Does this case require priority investigation by a field technician?"),
-    # 4th question: Jev's own confidence, asked directly and independently of the other answers.
-    # It measures how clearly the findings support the classification, NOT whether the root cause is known
-    # (a real anomaly is classified by exclusion; asking "is the cause known?" would punish exactly that case).
-    "confidence": Score(
-        instructions="Given the findings, how clearly do they support the chosen classification (real anomaly / explainable / false positive / data quality) and its severity?",
-        criteria=[
-            "Weakly: the findings could fit two or more classifications equally.",
-            "Moderately: one classification fits best but another remains plausible.",
-            "Strongly: the findings point unambiguously to one classification and severity.",
-        ],
-    ),
 }
-CONFIDENCE_LEVELS = ["WEAK", "MODERATE", "STRONG"]
 
 
 def to_jev_state(c: Candidate) -> str:
@@ -102,17 +94,23 @@ class JevDecisionProvider:
         t = r.answers["type"]
         s = r.answers["severity"]
         p = r.answers["priority"]
-        cf = r.answers["confidence"]
         sev_idx = min(2, max(0, round(s.score)))
         severity = SEVERITY_LEVELS[sev_idx]
         priority = p.noul >= 0.5
-        # Confidence = Jev's direct answer to the 4th question: position on the 0..2 conclusiveness scale, mapped to 0..1.
+        # Confidence composed in code from the three answers: Jev's own `confidence` statistic
+        # (how concentrated the distribution is) for type and severity, times how sure the
+        # priority answer was (P(yes) if yes, P(no) if no). Shown factor by factor in the UI.
+        parts = {
+            "type": round(float(t.confidence), 2),
+            "severity": round(float(s.confidence), 2),
+            "priority": round(float(p.noul if priority else 1 - p.noul), 2),
+        }
         return Decision(
             type=t.choice,
             severity=severity,
             priority=priority,
-            confidence=round(min(1.0, max(0.0, float(cf.score) / 2)), 2),
-            confidence_probabilities={CONFIDENCE_LEVELS[int(k)]: round(v, 3) for k, v in cf.probabilities.items() if int(k) < 3},
+            confidence=round(parts["type"] * parts["severity"] * parts["priority"], 2),
+            confidence_parts=parts,
             type_probabilities={k: round(v, 3) for k, v in t.probabilities.items()},
             severity_probabilities={SEVERITY_LEVELS[int(k)]: round(v, 3) for k, v in s.probabilities.items() if int(k) < 3},
             priority_probability=round(p.noul, 3),

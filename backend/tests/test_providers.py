@@ -54,7 +54,7 @@ def test_templates_have_no_placeholders(cands):
 
 
 def test_jev_state_is_english_and_mentions_absent_signals(cands):
-    assert set(QUESTIONS) == {"type", "severity", "priority", "confidence"}
+    assert set(QUESTIONS) == {"type", "severity", "priority"}
     s = to_jev_state(cands["M-109"])
     assert "110.4% above" in s and "UNKNOWN" in s and "No operational change" in s
     assert "within the ±5% band" in s  # negative findings are stated explicitly

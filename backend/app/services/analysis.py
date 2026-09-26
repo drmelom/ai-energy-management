@@ -169,7 +169,7 @@ class AnalysisRunner:
                                      "description": ev.description, "relation": rel} for ev, rel in c.events],
                     ai_meta={
                         "decision_provider": d.provider, "decision_probabilities": d.type_probabilities,
-                        "severity_probabilities": d.severity_probabilities, "priority_probability": d.priority_probability, "confidence_probabilities": d.confidence_probabilities,
+                        "severity_probabilities": d.severity_probabilities, "priority_probability": d.priority_probability, "confidence_parts": d.confidence_parts,
                         "explanation_provider": e.provider, "fallback_notes": d.notes + e.notes,
                         "latency_ms": {"decision": d.latency_ms, "explanation": e.latency_ms}, "cached": r.get("cached", {}),
                     },

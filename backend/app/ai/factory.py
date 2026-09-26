@@ -49,8 +49,8 @@ class DecisionWithFallback:
         if g:
             log.warning("%s: Jev said %s but %s, using rules", c.meter_id, d.type, g)
             rd = decide_by_rules(c, notes=[g, f"jev_said:{d.type}/{d.severity}"])
-            rd.type_probabilities, rd.severity_probabilities, rd.priority_probability, rd.confidence_probabilities = (
-                d.type_probabilities, d.severity_probabilities, d.priority_probability, d.confidence_probabilities)
+            rd.type_probabilities, rd.severity_probabilities, rd.priority_probability, rd.confidence_parts = (
+                d.type_probabilities, d.severity_probabilities, d.priority_probability, d.confidence_parts)
             rd.latency_ms = d.latency_ms
             return rd
         return d

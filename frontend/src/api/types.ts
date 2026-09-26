@@ -32,7 +32,7 @@ export interface Evidence {
 export interface EventRef { event_id: number; type: string; timestamp: string; description: string; relation: string }
 export interface AiMeta {
   decision_provider: 'jev' | 'rules'; decision_probabilities: Record<string, number> | null; severity_probabilities: Record<string, number> | null;
-  priority_probability: number | null; confidence_probabilities: Record<string, number> | null; explanation_provider: string; fallback_notes: string[]; latency_ms: Record<string, number>; cached: Record<string, boolean>;
+  priority_probability: number | null; confidence_parts: Record<string, number> | null; explanation_provider: string; fallback_notes: string[]; latency_ms: Record<string, number>; cached: Record<string, boolean>;
 }
 export interface AnomalySummary {
   id: number; rank: number; meter_id: string; meter_name: string; detected_at: string; type: AnomalyType; severity: Severity;
