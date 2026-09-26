@@ -1,3 +1,6 @@
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { ConfidenceFormula } from './ProbBars';
+
 /** Horizontal CSS bar, 0–100, always from zero. Base of ConfidenceBar and ProbBars. */
 export function HBar({ value, fill = 'var(--muted-foreground)', width = 64, height = 6, label }: { value: number; fill?: string; width?: number | string; height?: number; label?: string }) {
   const v = Math.max(0, Math.min(100, value));
@@ -15,9 +18,20 @@ export function HBar({ value, fill = 'var(--muted-foreground)', width = 64, heig
 // Same scale the test statement uses in its anomalies table ("Alta", "Media", "Baja").
 export const confidenceLabel = (c: number) => (c >= 0.8 ? 'Alta' : c >= 0.6 ? 'Media' : 'Baja');
 
-export const ConfidenceBar = ({ confidence, width = 64 }: { confidence: number; width?: number }) => (
-  <HBar value={confidence * 100} width={width} label={`${confidenceLabel(confidence)} · ${Math.round(confidence * 100)} %`} />
-);
+export function ConfidenceBar({ confidence, width = 64, parts }: { confidence: number; width?: number; parts?: Record<string, number> | null }) {
+  const bar = <HBar value={confidence * 100} width={width} label={`${confidenceLabel(confidence)} · ${Math.round(confidence * 100)} %`} />;
+  if (!parts) return bar;
+  return (
+    <Tooltip>
+      <TooltipTrigger render={<span className="cursor-help underline decoration-dotted decoration-muted-foreground/60 underline-offset-4" />}>{bar}</TooltipTrigger>
+      <TooltipContent className="max-w-xs text-xs">
+        <p className="font-semibold mb-0.5">De dónde sale la confianza</p>
+        <ConfidenceFormula parts={parts} />
+        <p className="mt-1 opacity-80">Certeza del modelo en el tipo × en la severidad × en la decisión de prioridad.</p>
+      </TooltipContent>
+    </Tooltip>
+  );
+}
 
 /** Bar centred on zero: length ∝ |value| / max, colour = tone of the row (severity) or neutral mark. */
 export function VariationBar({ value, max, color = 'var(--mark-neutral)', width = 160 }: { value: number; max: number; color?: string; width?: number }) {

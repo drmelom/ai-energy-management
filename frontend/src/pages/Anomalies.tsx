@@ -28,7 +28,7 @@ export default function Anomalies() {
     { key: 'meter', header: 'Medidor', render: r => <Link to={`/meters/${r.meter_id}`} className="text-foreground"><div className="font-semibold">{r.meter_id}</div><div className="text-xs text-muted-foreground">{r.meter_name}</div></Link> },
     { key: 'type', header: 'Tipo', render: r => <TypeBadge type={r.type} /> },
     { key: 'severity', header: 'Severidad', render: r => <SeverityBadge severity={r.severity} priority={r.priority} /> },
-    { key: 'confidence', header: 'Confianza', render: r => <ConfidenceBar confidence={r.confidence} /> },
+    { key: 'confidence', header: 'Confianza', render: r => <ConfidenceBar confidence={r.confidence} parts={r.confidence_parts} /> },
     { key: 'reason', header: 'Hallazgo', render: r => <span className="clamp-1 text-muted-foreground min-w-[240px] max-w-[520px] block" title={r.reason}>{r.reason}</span> },
     { key: 'status', header: 'Estado', render: r => <AnomalyStatusChip status={r.status} /> },
     { key: 'action', header: 'Acción', align: 'right', render: r => <Button variant="outline" size="sm" nativeButton={false} render={<Link to={`/anomalies/${r.id}`} />}>Investigar →</Button> },

@@ -61,7 +61,7 @@ export default function Investigation() {
           <div className="flex items-center gap-3 flex-wrap">
             <TypeBadge type={d.type} /><SeverityBadge severity={d.severity} priority={d.priority} />
             {d.priority && <Badge tone="critical"><Flag className="size-3" />Prioritaria</Badge>}
-            <span className="flex items-center gap-2 text-xs text-muted-foreground">Confianza <ConfidenceBar confidence={d.confidence} width={120} /></span>
+            <span className="flex items-center gap-2 text-xs text-muted-foreground">Confianza <ConfidenceBar confidence={d.confidence} width={120} parts={d.ai_meta.confidence_parts} /></span>
           </div>
           <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]">
             <div className="flex flex-col gap-4 min-w-0">
@@ -84,7 +84,7 @@ export default function Investigation() {
             </div>
             <aside className="flex flex-col gap-4 min-w-0">
               <Section title="Decisión de la IA">
-                <ProbBars meta={d.ai_meta} winner={d.type} severity={d.severity} />
+                <ProbBars meta={d.ai_meta} winner={d.type} severity={d.severity} priority={d.priority} />
                 <p className="text-xs text-muted-foreground mt-3">Tiempo de análisis: <span className="num text-foreground">{d.ai_meta.latency_ms.decision + d.ai_meta.latency_ms.explanation} ms</span></p>
                 {d.ai_meta.fallback_notes.length > 0 && <p className="text-xs text-warning-ink flex items-center gap-1 mt-1"><TriangleAlert className="size-3" />Se usó el respaldo determinista en este caso.</p>}
               </Section>

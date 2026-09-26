@@ -15,6 +15,7 @@ def _summary(a: Anomaly, names: dict[str, str]) -> AnomalySummary:
         type=a.type, severity=a.severity, confidence=a.confidence, priority=bool(a.priority), status=a.status,
         reason=a.reason, recommended_action=a.recommended_action,
         providers={"decision": a.ai_meta.get("decision_provider", "?"), "explanation": a.ai_meta.get("explanation_provider", "?")},
+        confidence_parts=a.ai_meta.get("confidence_parts"),
     )
 
 

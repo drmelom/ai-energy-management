@@ -180,6 +180,7 @@ class AnomalySummary(BaseModel):
     reason: str
     recommended_action: str
     providers: dict[str, str] = Field(description="Quién decidió (jev|rules) y quién explicó (llm:<modelo>|template)")
+    confidence_parts: dict[str, float] | None = Field(default=None, description="Factores de la confianza: certeza de tipo, severidad y prioridad")
 
 
 class AnomalyDetail(AnomalySummary):

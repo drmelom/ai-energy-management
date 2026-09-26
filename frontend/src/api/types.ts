@@ -37,6 +37,7 @@ export interface AiMeta {
 export interface AnomalySummary {
   id: number; rank: number; meter_id: string; meter_name: string; detected_at: string; type: AnomalyType; severity: Severity;
   confidence: number; priority: boolean; status: string; reason: string; recommended_action: string; providers: { decision: string; explanation: string };
+  confidence_parts: Record<string, number> | null;
 }
 export interface AnomalyDetail extends AnomalySummary {
   window: { from: string; to: string; hours: number }; evidence: Evidence[]; events_matched: EventRef[]; ai_meta: AiMeta; analysis_run_id: string;

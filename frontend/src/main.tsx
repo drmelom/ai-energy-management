@@ -11,6 +11,7 @@ import MeterDetail from './pages/MeterDetail';
 import Meters from './pages/Meters';
 import { RunProvider } from './state/run';
 import { Toaster } from './components/ui/sonner';
+import { TooltipProvider } from './components/ui/tooltip';
 import { applyTheme } from './components/AppShell';
 
 try { applyTheme((localStorage.getItem('theme') as 'light' | 'dark' | 'system') || 'system'); } catch { applyTheme('system'); }
@@ -25,6 +26,7 @@ function Guard({ children }: { children: ReactNode }) {
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
+      <TooltipProvider>
       <Toaster />
       <Routes>
         <Route path="/login" element={<Login />} />
@@ -36,6 +38,7 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/analysis" element={<Guard><Analysis /></Guard>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      </TooltipProvider>
     </BrowserRouter>
   </StrictMode>,
 );
