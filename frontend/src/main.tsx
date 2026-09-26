@@ -10,6 +10,7 @@ import Login from './pages/Login';
 import MeterDetail from './pages/MeterDetail';
 import Meters from './pages/Meters';
 import { RunProvider } from './state/run';
+import { Toaster } from './components/ui/sonner';
 import { applyTheme } from './components/AppShell';
 
 try { applyTheme((localStorage.getItem('theme') as 'light' | 'dark' | 'system') || 'system'); } catch { applyTheme('system'); }
@@ -24,6 +25,7 @@ function Guard({ children }: { children: ReactNode }) {
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
+      <Toaster />
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/" element={<Guard><Dashboard /></Guard>} />

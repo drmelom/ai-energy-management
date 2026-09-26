@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Flag, TriangleAlert } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { api, useQuery } from '../api/client';
@@ -38,10 +39,20 @@ export default function Investigation() {
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const current = status ?? d?.status ?? 'OPEN';
+  const LABEL: Record<string, string> = { ACKNOWLEDGED: 'marcada en revisión', RESOLVED: 'resuelta', OPEN: 'reabierta' };
   const setTo = async (s: string) => {
     if (!d) return;
     const prev = current; setStatus(s); setSaving(true); setErr(null);
-    try { await api.patchAnomaly(d.id, s); } catch (e) { setStatus(prev); setErr(String((e as Error).message)); } finally { setSaving(false); }
+    try {
+      await api.patchAnomaly(d.id, s);
+      toast.success(`${d.meter_id} · anomalía ${LABEL[s] ?? s}`, {
+        description: s === 'RESOLVED' ? 'El estado se conserva en los próximos análisis del mismo medidor y tipo.' : d.recommended_action,
+        action: s !== prev ? { label: 'Deshacer', onClick: () => void setTo(prev) } : undefined,
+      });
+    } catch (e) {
+      setStatus(prev); setErr(String((e as Error).message));
+      toast.error('No se pudo guardar el estado', { description: String((e as Error).message) });
+    } finally { setSaving(false); }
   };
 
   return (
