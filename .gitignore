@@ -23,3 +23,6 @@ Thumbs.db
 
 # evaluator-only ground truth must never enter the repo
 expected_results.csv
+
+# local tooling
+.claude/
