@@ -10,6 +10,9 @@ import Login from './pages/Login';
 import MeterDetail from './pages/MeterDetail';
 import Meters from './pages/Meters';
 import { RunProvider } from './state/run';
+import { applyTheme } from './components/AppShell';
+
+try { applyTheme((localStorage.getItem('theme') as 'light' | 'dark' | 'system') || 'system'); } catch { applyTheme('system'); }
 
 const hasToken = () => { try { return !!sessionStorage.getItem('token'); } catch { return false; } };
 

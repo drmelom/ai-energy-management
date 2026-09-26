@@ -27,16 +27,16 @@ export function EvidenceList({ items }: { items: Evidence[] }) {
         const hasPair = e.observed != null && e.expected != null && !e.kind.startsWith('EVENT_') && e.kind !== 'DURATION_MATCH';
         return (
           <li key={i} className="flex items-start gap-3 py-2.5">
-            <Icon name={icon} size={16} className="text-ink-2 mt-0.5 shrink-0" />
+            <Icon name={icon} size={16} className="text-muted-foreground mt-0.5 shrink-0" />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-0.5"><Badge tone="neutral" compact>{e.weight === 'primary' ? 'Principal' : 'Apoyo'}</Badge></div>
-              <p className="text-ink">{e.text_es}</p>
+              <p className="text-foreground">{e.text_es}</p>
             </div>
             {hasPair && (
               <div className="text-right num shrink-0 text-xs">
-                <div className="text-ink"><span className="font-semibold">{fmtUnit(e.observed, e.unit)}</span> <span className="text-ink-3">← {fmtUnit(e.expected, e.unit)}</span></div>
-                {e.deviation_pct != null && <div className="text-ink-2">{fmtPct(e.deviation_pct)}</div>}
-                {e.share_pct != null && <div className="text-ink-2">{fmtNum(e.share_pct, 1)} % de las horas</div>}
+                <div className="text-foreground"><span className="font-semibold">{fmtUnit(e.observed, e.unit)}</span> <span className="text-muted-foreground/70">← {fmtUnit(e.expected, e.unit)}</span></div>
+                {e.deviation_pct != null && <div className="text-muted-foreground">{fmtPct(e.deviation_pct)}</div>}
+                {e.share_pct != null && <div className="text-muted-foreground">{fmtNum(e.share_pct, 1)} % de las horas</div>}
               </div>
             )}
           </li>
@@ -55,19 +55,19 @@ const VARS: { key: string; label: string; kinds: string[]; unit: 'kwh' | 'v' | '
 
 export function BeforeAfterTable({ items }: { items: Evidence[] }) {
   return (
-    <table className="dt">
+    <table className="w-full text-sm [&_th]:text-left [&_th]:text-xs [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:h-9 [&_th]:px-3 [&_th]:bg-muted/50 [&_td]:px-3 [&_td]:border-t [&_td]:border-border">
       <thead><tr><th>Variable</th><th style={{ textAlign: 'right' }}>Baseline</th><th style={{ textAlign: 'right' }}>Ventana</th><th style={{ textAlign: 'right' }}>Δ</th></tr></thead>
       <tbody>
         {VARS.map(v => {
           const e = items.find(x => v.kinds.includes(x.kind) && x.observed != null && x.expected != null);
-          if (!e) return <tr key={v.key} style={{ height: 36 }}><td>{v.label}</td><td colSpan={3} className="text-ink-3 text-right">sin cambio</td></tr>;
+          if (!e) return <tr key={v.key} style={{ height: 36 }}><td>{v.label}</td><td colSpan={3} className="text-muted-foreground/70 text-right">sin cambio</td></tr>;
           const f = (x: number) => (v.unit === 'pf' ? fmtPF(x) : v.unit === 'a' ? `${fmtNum(x, 0)} A` : v.unit === 'v' ? `${fmtNum(x, 1)} V` : fmtNum(x, 0));
           const up = e.observed! > e.expected!;
           const delta = e.deviation_pct != null ? fmtPct(e.deviation_pct) : v.unit === 'pf' ? (e.observed! - e.expected!).toLocaleString('es-CO', { maximumFractionDigits: 2, signDisplay: 'exceptZero' }) : `${fmtNum(e.observed! - e.expected!, 1)} ${v.unit === 'v' ? 'V' : ''}`;
           return (
             <tr key={v.key} style={{ height: 36 }}>
               <td>{v.label}</td><td className="num text-right">{f(e.expected!)}</td><td className="num text-right font-semibold">{f(e.observed!)}</td>
-              <td className="num text-right">{delta} <span className="text-ink-3">{up ? '↑' : '↓'}</span></td>
+              <td className="num text-right">{delta} <span className="text-muted-foreground/70">{up ? '↑' : '↓'}</span></td>
             </tr>
           );
         })}
@@ -77,7 +77,7 @@ export function BeforeAfterTable({ items }: { items: Evidence[] }) {
 }
 
 export function EventsTimeline({ events, anchor }: { events: EventRef[]; anchor: string }) {
-  if (!events.length) return <p className="text-ink-2 text-xs">Sin eventos registrados para este medidor en ±24 h.</p>;
+  if (!events.length) return <p className="text-muted-foreground text-xs">Sin eventos registrados para este medidor en ±24 h.</p>;
   const a = parseNaive(anchor);
   return (
     <ol className="relative pl-4 border-l border-border flex flex-col gap-3">
@@ -86,10 +86,10 @@ export function EventsTimeline({ events, anchor }: { events: EventRef[]; anchor:
         const lag = Math.round((parseNaive(e.timestamp) - a) / 3_600_000);
         return (
           <li key={e.event_id} className="relative">
-            <span aria-hidden className="absolute -left-[21px] top-1.5 w-2.5 h-2.5 rounded-full bg-ink-2 ring-2 ring-surface" />
-            <div className="flex items-center gap-2 text-xs"><span className="num text-ink-2">{fmtIso(e.timestamp)}</span><Badge tone="neutral" compact>{e.type}</Badge></div>
-            <p className="text-ink mt-0.5">«{e.description}»</p>
-            <p className={`text-xs mt-0.5 text-${rel.tone}-ink font-semibold`}>{rel.label} <span className="text-ink-3 font-normal">· lag {lag} h respecto al inicio</span></p>
+            <span aria-hidden className="absolute -left-[21px] top-1.5 w-2.5 h-2.5 rounded-full bg-muted-foreground ring-2 ring-card" />
+            <div className="flex items-center gap-2 text-xs"><span className="num text-muted-foreground">{fmtIso(e.timestamp)}</span><Badge tone="neutral" compact>{e.type}</Badge></div>
+            <p className="text-foreground mt-0.5">«{e.description}»</p>
+            <p className={`text-xs mt-0.5 text-${rel.tone}-ink font-semibold`}>{rel.label} <span className="text-muted-foreground/70 font-normal">· lag {lag} h respecto al inicio</span></p>
           </li>
         );
       })}

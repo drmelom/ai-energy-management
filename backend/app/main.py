@@ -39,7 +39,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         engine.dispose()
 
     app = FastAPI(title="AI Energy Management API", version="0.1.0", lifespan=lifespan)
-    app.add_middleware(CORSMiddleware, allow_origins=settings.cors_origins, allow_methods=["*"], allow_headers=["*"])
+    # any localhost/127.0.0.1 port is allowed in addition to CORS_ORIGINS, so a Vite server on 5174 still works
+    app.add_middleware(CORSMiddleware, allow_origins=settings.cors_origins,
+                       allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?", allow_methods=["*"], allow_headers=["*"])
 
     @app.middleware("http")
     async def request_id_middleware(request: Request, call_next):

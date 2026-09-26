@@ -1,36 +1,41 @@
 import type { ReactNode } from 'react';
+import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { cn } from '@/lib/utils';
 
-export interface Col<T> { key: string; header: string; render: (row: T) => ReactNode; align?: 'left' | 'right'; sortable?: boolean; width?: string }
+export interface Col<T> { key: string; header: ReactNode; render: (row: T) => ReactNode; align?: 'left' | 'right'; sortable?: boolean; width?: string }
 
 export function DataTable<T>({ columns, rows, rowKey, sort, order, onSort, rowClass, empty = 'Sin resultados' }: {
   columns: Col<T>[]; rows: T[]; rowKey: (r: T) => string | number; sort?: string; order?: 'asc' | 'desc';
   onSort?: (key: string) => void; rowClass?: (r: T) => string; empty?: string;
 }) {
   return (
-    <div className="card overflow-x-auto">
-      <table className="dt">
-        <thead>
-          <tr>
+    <Card className="py-0 overflow-hidden">
+      <Table>
+        <TableHeader className="bg-muted/50">
+          <TableRow className="hover:bg-transparent">
             {columns.map(c => (
-              <th key={c.key} style={{ width: c.width, textAlign: c.align ?? 'left' }} aria-sort={sort === c.key ? (order === 'desc' ? 'descending' : 'ascending') : undefined}>
+              <TableHead key={c.key} style={{ width: c.width }} className={cn('text-xs font-semibold whitespace-nowrap', c.align === 'right' && 'text-right')}
+                aria-sort={sort === c.key ? (order === 'desc' ? 'descending' : 'ascending') : undefined}>
                 {c.sortable && onSort ? (
-                  <button type="button" onClick={() => onSort(c.key)} className="inline-flex items-center gap-1 hover:text-ink">
-                    {c.header}<span className="text-ink-3 text-[10px]">{sort === c.key ? (order === 'desc' ? '▼' : '▲') : '⇅'}</span>
+                  <button type="button" onClick={() => onSort(c.key)} className="inline-flex items-center gap-1 hover:text-foreground">
+                    {c.header}{sort === c.key ? (order === 'desc' ? <ArrowDown className="size-3" /> : <ArrowUp className="size-3" />) : <ArrowUpDown className="size-3 opacity-50" />}
                   </button>
                 ) : c.header}
-              </th>
+              </TableHead>
             ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.length === 0 && <tr><td colSpan={columns.length} className="text-center text-ink-2 py-8">{empty}</td></tr>}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {rows.length === 0 && <TableRow><TableCell colSpan={columns.length} className="text-center text-muted-foreground py-8">{empty}</TableCell></TableRow>}
           {rows.map(r => (
-            <tr key={rowKey(r)} className={rowClass?.(r)}>
-              {columns.map(c => <td key={c.key} style={{ textAlign: c.align ?? 'left' }}>{c.render(r)}</td>)}
-            </tr>
+            <TableRow key={rowKey(r)} className={cn('h-12', rowClass?.(r))}>
+              {columns.map(c => <TableCell key={c.key} className={cn('py-2', c.align === 'right' && 'text-right')}>{c.render(r)}</TableCell>)}
+            </TableRow>
           ))}
-        </tbody>
-      </table>
-    </div>
+        </TableBody>
+      </Table>
+    </Card>
   );
 }

@@ -1,13 +1,22 @@
 import type { ReactNode } from 'react';
+import { Badge as UiBadge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import { Icon } from './Icon';
 import { ANOMALY_STATUS, SEVERITY, STATUS, TYPE, type AnomalyType, type IconName, type MeterStatus, type Severity, type Tone } from '../lib/semantics';
 
-export function Badge({ tone, icon, children, compact, title }: { tone: Tone; icon?: IconName; children: ReactNode; compact?: boolean; title?: string }) {
+const TONE_CLASS: Record<Tone, string> = {
+  ok: 'bg-ok-wash text-ok-ink', warning: 'bg-warning-wash text-warning-ink', critical: 'bg-critical-wash text-critical-ink',
+  neutral: 'bg-neutral-wash text-neutral-ink', 't-real': 'bg-t-real-wash text-t-real-ink', 't-dq': 'bg-t-dq-wash text-t-dq-ink',
+  't-expl': 'bg-t-expl-wash text-t-expl-ink', 't-fp': 'bg-t-fp-wash text-t-fp-ink',
+};
+
+export function Badge({ tone, icon, children, compact, title, className }: { tone: Tone; icon?: IconName; children: ReactNode; compact?: boolean; title?: string; className?: string }) {
   return (
-    <span title={title} className={`inline-flex items-center gap-1 rounded-[6px] font-semibold whitespace-nowrap bg-${tone}-wash text-${tone}-ink ${compact ? 'h-5 px-1.5 text-[11px]' : 'h-[22px] px-2 text-xs'}`}>
+    <UiBadge variant="secondary" title={title}
+      className={cn('gap-1 rounded-md font-semibold whitespace-nowrap border-0', TONE_CLASS[tone], compact ? 'h-5 px-1.5 text-[11px]' : 'h-[22px] px-2 text-xs', className)}>
       {icon && <Icon name={icon} size={compact ? 11 : 13} />}
       {children}
-    </span>
+    </UiBadge>
   );
 }
 
@@ -31,7 +40,3 @@ export const AnomalyStatusChip = ({ status }: { status: string }) => {
   const s = ANOMALY_STATUS[status] ?? { tone: 'neutral' as Tone, label: status };
   return <Badge tone={s.tone}>{s.label}</Badge>;
 };
-
-// Tailwind v4 needs the class names to appear literally somewhere for generation:
-// bg-ok-wash text-ok-ink bg-warning-wash text-warning-ink bg-critical-wash text-critical-ink bg-neutral-wash text-neutral-ink
-// bg-t-real-wash text-t-real-ink bg-t-dq-wash text-t-dq-ink bg-t-expl-wash text-t-expl-ink bg-t-fp-wash text-t-fp-ink
