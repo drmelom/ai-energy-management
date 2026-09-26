@@ -20,7 +20,7 @@ export default function Dashboard() {
   const period = d ? `${fmtDay(parseNaive(d.consumption.period_from))} – ${fmtDay(parseNaive(d.consumption.period_to))}` : '';
   return (
     <AppShell title="Dashboard" priorityCount={d?.anomalies.priority}>
-      <section className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }} aria-label="Indicadores">
+      <section className="grid gap-4 stagger" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }} aria-label="Indicadores">
         <KpiTile label="Medidores" value={d?.meters.total ?? '—'} loading={!d}
           sub={d && (['NORMAL', 'WARNING', 'CRITICAL', 'UNKNOWN'] as MeterStatus[]).filter(s => d.meters.by_status[s]).map(s => <span key={s} className="flex items-center gap-1"><span className="num font-semibold text-foreground">{d.meters.by_status[s]}</span><StatusBadge status={s} compact /></span>)} />
         <KpiTile label="Consumo del periodo" value={d ? fmtKwh(d.consumption.total_kwh) : '—'} loading={!d} sub={d && <>{period} · media {fmtKwh(d.consumption.avg_daily_kwh, 0)}/día</>} />

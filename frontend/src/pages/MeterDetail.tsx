@@ -49,7 +49,7 @@ export default function MeterDetail() {
           {m.anomalies.map(x => <span key={x.id} className="flex items-center gap-1.5"><TypeBadge type={x.type} /><SeverityBadge severity={x.severity} priority={x.priority} /><Button variant="link" size="sm" className="px-1" nativeButton={false} render={<Link to={`/anomalies/${x.id}`} />}>Investigar →</Button></span>)}
           {m.anomalies.length === 0 && <span className="text-xs text-muted-foreground">Sin anomalías en el último análisis</span>}</>}
       </div>
-      <section className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+      <section className="grid gap-4 stagger" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
         <KpiTile label="Consumo actual (último día)" value={lastDay ? fmtKwh(lastDay.consumption_kwh) : '—'} loading={!lastDay} sub={lastDay && fmtDay(parseNaive(lastDay.timestamp))} />
         <KpiTile label="Baseline diario" value={lastDay?.baseline_kwh != null ? fmtKwh(lastDay.baseline_kwh) : '—'} loading={!lastDay} sub="mediana horaria · días 1–7" />
         <KpiTile label="Variación" value={<span className={tone}>{lastDay?.deviation_pct != null ? fmtPct(lastDay.deviation_pct) : '—'}</span>} loading={!lastDay} sub="último día vs baseline diario" />

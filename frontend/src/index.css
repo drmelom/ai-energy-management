@@ -2,13 +2,16 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
+@import "@fontsource-variable/fraunces";
+@import "@fontsource-variable/jetbrains-mono";
 
 @custom-variant dark (&:is(.dark *));
 
 /* ---------- shadcn base (neutral) + brand primary (blue) ---------- */
 :root {
   --radius: 0.625rem;
-  --background: oklch(0.985 0.002 90);
+  --background: #f7f5ef;
+  --paper-line: rgba(28, 92, 171, 0.055);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
@@ -51,7 +54,8 @@
 }
 
 .dark {
-  --background: oklch(0.13 0 0);
+  --background: #121311;
+  --paper-line: rgba(255, 255, 255, 0.035);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.185 0 0);
   --card-foreground: oklch(0.985 0 0);
@@ -94,7 +98,9 @@
 
 @theme inline {
   --font-sans: 'Geist Variable', system-ui, sans-serif;
-  --font-heading: var(--font-sans);
+  --font-display: 'Fraunces Variable', Georgia, serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+  --font-heading: var(--font-display);
   --color-background: var(--background); --color-foreground: var(--foreground);
   --color-card: var(--card); --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover); --color-popover-foreground: var(--popover-foreground);
@@ -130,9 +136,30 @@
   html, body, #root { height: 100%; }
 }
 
-/* small utilities kept from the original design system */
-.num { font-variant-numeric: tabular-nums; }
-.display { font-size: 28px; line-height: 32px; font-weight: 600; letter-spacing: -0.01em; }
+/* ---------- "cuaderno de ingeniería": paper grid, serif figures, mono numbers ---------- */
+body {
+  background-color: var(--background);
+  background-image:
+    linear-gradient(var(--paper-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--paper-line) 1px, transparent 1px);
+  background-size: 24px 24px, 24px 24px;
+  background-attachment: fixed;
+}
+.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 0.96em; letter-spacing: -0.01em; }
+.display { font-family: var(--font-display); font-variation-settings: 'opsz' 48, 'SOFT' 30; font-size: 32px; line-height: 34px; font-weight: 500; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.display-lg { font-family: var(--font-display); font-variation-settings: 'opsz' 96, 'SOFT' 50; font-size: 44px; line-height: 46px; font-weight: 500; letter-spacing: -0.025em; }
+.eyebrow { font-size: 11px; line-height: 16px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted-foreground); }
+.serif { font-family: var(--font-display); font-variation-settings: 'opsz' 24; }
+h1, h2, h3, [data-slot="card-title"] { font-family: var(--font-display); font-variation-settings: 'opsz' 24, 'SOFT' 20; font-weight: 500; letter-spacing: -0.01em; }
+[data-slot="card"] { box-shadow: 0 1px 0 rgba(0,0,0,.02), 0 0 0 1px var(--border); border-color: transparent; }
+[data-slot="sidebar-inner"], [data-slot="sidebar"] { background-image: none; }
+.rule-top { border-top: 2px solid var(--foreground); }
+.stagger > * { animation: rise .5s cubic-bezier(.2,.7,.2,1) both; }
+.stagger > *:nth-child(1) { animation-delay: .02s } .stagger > *:nth-child(2) { animation-delay: .08s } .stagger > *:nth-child(3) { animation-delay: .14s }
+.stagger > *:nth-child(4) { animation-delay: .20s } .stagger > *:nth-child(5) { animation-delay: .26s } .stagger > *:nth-child(6) { animation-delay: .32s }
+.stagger > *:nth-child(n+7) { animation-delay: .38s }
+@keyframes rise { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: none } }
+@media (prefers-reduced-motion: reduce) { .stagger > * { animation: none; } }
 .clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
 .fade-in { animation: fade .2s ease-out; }
 @keyframes fade { from { opacity: 0; transform: translateY(2px) } to { opacity: 1; transform: none } }

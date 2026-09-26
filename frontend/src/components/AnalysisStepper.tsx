@@ -63,7 +63,8 @@ export function RunHeadline({ run, firstMeter }: { run: AnalysisRun; firstMeter?
     <Card className="fade-in">
       <CardContent className="flex items-center gap-6 flex-wrap">
         <div className="min-w-0">
-          <div className="display">{head}{tail && <span className="text-muted-foreground font-normal"> · {tail}</span>}</div>
+          <p className="eyebrow mb-1">Resultado del análisis</p>
+          <div className="display-lg">{head}{tail && <span className="text-muted-foreground"> · {tail}</span>}</div>
           <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground flex-wrap">
             {(['HIGH', 'MEDIUM', 'LOW'] as const).filter(k => s.by_severity[k]).map(k => <span key={k} className="flex items-center gap-1"><SeverityBadge severity={k} /><span className="num text-foreground font-semibold">{s.by_severity[k]}</span></span>)}
             <span>· confianza media <span className="num text-foreground font-semibold">{Math.round(s.avg_confidence * 100)} %</span></span>

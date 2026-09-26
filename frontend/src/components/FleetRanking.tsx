@@ -19,7 +19,7 @@ export function FleetRanking({ rows, hasRun }: { rows: MeterListItem[]; hasRun: 
       <CardHeader className="px-5 pt-5 pb-3 flex-row items-baseline justify-between">
         <div>
           <CardTitle className="text-lg">Desvío frente al baseline por medidor</CardTitle>
-          <CardDescription>Último día vs baseline diario (mediana horaria, días 1–7) · escala ±{Math.round(max)} %</CardDescription>
+          <CardDescription className="eyebrow normal-case tracking-normal">Último día vs baseline diario (mediana horaria, días 1–7) · escala ±{Math.round(max)} %</CardDescription>
         </div>
         {!hasRun && <span className="text-xs text-muted-foreground">Ejecuta el análisis IA para clasificar los medidores</span>}
       </CardHeader>

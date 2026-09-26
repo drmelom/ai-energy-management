@@ -107,7 +107,7 @@ export function AppShell({ title, crumbs, children, priorityCount }: { title: st
                   <BreadcrumbSeparator className="hidden md:block" />
                 </span>
               ))}
-              <BreadcrumbItem><BreadcrumbPage className="font-semibold">{title}</BreadcrumbPage></BreadcrumbItem>
+              <BreadcrumbItem><BreadcrumbPage className="serif text-base font-medium">{title}</BreadcrumbPage></BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
           <div className="ml-auto flex items-center gap-2">
