@@ -41,6 +41,7 @@ export const api = {
   patchAnomaly: (id: number, status: string) => call<T.AnomalySummary>('PATCH', `/anomalies/${id}`, { status }),
   analyze: (force_refresh = true) => call<T.AnalyzeAccepted>('POST', '/ai/analyze', { force_refresh }),
   run: (id: string) => call<T.AnalysisRun>('GET', `/ai/analysis/${id}`),
+  graph: () => call<T.PipelineGraph>('GET', '/ai/graph'),
   runs: (limit = 5) => call<{ items: T.AnalysisRun[] }>('GET', `/ai/analysis${qs({ limit })}`),
 };
 

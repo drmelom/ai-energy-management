@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Cpu, LayoutDashboard, List, LogOut, Moon, Monitor, Play, Siren, Sun, Zap } from 'lucide-react';
+import { Cpu, LayoutDashboard, List, LogOut, Moon, Monitor, Play, Siren, Sun, Workflow, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -16,6 +16,7 @@ const NAV = [
   { to: '/meters', label: 'Medidores', icon: List },
   { to: '/anomalies', label: 'Anomalías IA', icon: Siren },
   { to: '/analysis', label: 'Análisis IA', icon: Cpu },
+  { to: '/pipeline', label: 'Pipeline', icon: Workflow },
 ];
 
 type Theme = 'light' | 'dark' | 'system';

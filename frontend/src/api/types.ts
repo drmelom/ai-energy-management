@@ -59,4 +59,6 @@ export interface DashboardSummary {
   last_analysis: { id: string; status: string; current_stage: string | null; started_at: string; finished_at: string | null; headline: string | null; providers: { decision: string; explanation: string } } | null;
   ai_mode: { decision: string; explanation: string };
 }
+export interface GraphNode { key: string; label: string; kind: 'deterministic' | 'ai'; tech: string; description: string; outputs: string[] }
+export interface PipelineGraph { nodes: GraphNode[]; edges: { source: string; target: string }[]; mermaid: string }
 export interface Health { status: string; db: string; readings: number; providers: { decision: string; explanation: string }; jev_model: string | null; llm_models: string[] }

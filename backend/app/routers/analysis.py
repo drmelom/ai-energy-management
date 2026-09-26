@@ -11,6 +11,43 @@ from app.schemas import AnalysisRunOut, AnalyzeAccepted, AnalyzeIn
 
 router = APIRouter(prefix="/ai", tags=["ai"])
 
+# Human-readable documentation of each LangGraph node, served with the real graph topology.
+NODE_DOCS = {
+    "readings": {"label": "Lecturas", "kind": "deterministic", "tech": "SQLite → pandas",
+                 "description": "Carga las 4.032 lecturas y los eventos desde la base de datos y valida continuidad horaria (sin huecos, sin nulos).",
+                 "outputs": ["readings", "events"]},
+    "baseline": {"label": "Baseline", "kind": "deterministic", "tech": "pandas",
+                 "description": "Perfil horario por medidor: mediana de kWh, V, A y PF para cada hora del día sobre los primeros 7 días.",
+                 "outputs": ["baselines"]},
+    "detection": {"label": "Detección", "kind": "deterministic", "tech": "pandas",
+                  "description": "Segmentos de consumo (≥ 6 h seguidas con |desvío| ≥ 25 %) y señales de calidad de dato (tensión fuera de ±5 %, saltos > 10 V, residuo P≈V·I·PF errático).",
+                  "outputs": ["candidates"]},
+    "correlation": {"label": "Correlación", "kind": "deterministic", "tech": "pandas",
+                    "description": "Contexto eléctrico de cada segmento: caída de factor de potencia, bajada de tensión y cambio de corriente frente al baseline.",
+                    "outputs": ["candidates (+evidencia eléctrica)"]},
+    "events": {"label": "Eventos", "kind": "deterministic", "tech": "reglas",
+               "description": "Cruce con events.csv en ±24 h con semántica por tipo: OPERATIONAL_CHANGE explica subidas, SCHEDULED_OUTAGE explica bajadas, UNKNOWN no explica nada, DATA_QUALITY corrobora.",
+               "outputs": ["candidates (+eventos)"]},
+    "explanation": {"label": "Explicación", "kind": "ai", "tech": "Jev + LLM",
+                    "description": "Única etapa con IA. Jev (modelo de decisión) responde tres preguntas cerradas sobre la evidencia verbalizada: tipo, severidad y prioridad, con probabilidades. Un LLM redacta razón y acción citando solo cifras de la evidencia; un validador rechaza cifras inventadas. Fallbacks deterministas si un proveedor falla.",
+                    "outputs": ["decisions", "explanations"]},
+    "recommendation": {"label": "Recomendación", "kind": "deterministic", "tech": "reglas",
+                       "description": "Ordena por prioridad, severidad y tipo, calcula el resumen y el titular, y prepara las anomalías para persistir.",
+                       "outputs": ["ranked", "summary"]},
+}
+
+
+@router.get("/graph", summary="Grafo del pipeline (LangGraph)",
+            description="Topología real del grafo compilado (nodos y aristas) con la documentación de cada nodo y el diagrama Mermaid generado por LangGraph.")
+def get_graph(request: Request):
+    g = request.app.state.runner.graph.get_graph()
+    order = [n for n in g.nodes if not n.startswith("__")]
+    return {
+        "nodes": [{"key": k, **NODE_DOCS.get(k, {"label": k, "kind": "deterministic", "tech": "", "description": "", "outputs": []})} for k in order],
+        "edges": [{"source": e.source, "target": e.target} for e in g.edges],
+        "mermaid": g.draw_mermaid(),
+    }
+
 
 def _out(run: AnalysisRun, with_stages: bool = True) -> AnalysisRunOut:
     return AnalysisRunOut(

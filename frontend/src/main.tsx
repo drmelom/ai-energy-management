@@ -9,9 +9,11 @@ import Investigation from './pages/Investigation';
 import Login from './pages/Login';
 import MeterDetail from './pages/MeterDetail';
 import Meters from './pages/Meters';
+import Pipeline from './pages/Pipeline';
 import { RunProvider } from './state/run';
 import { Toaster } from './components/ui/sonner';
 import { TooltipProvider } from './components/ui/tooltip';
+import { ApiGate } from './components/ApiGate';
 import { applyTheme } from './components/AppShell';
 
 try { applyTheme((localStorage.getItem('theme') as 'light' | 'dark' | 'system') || 'system'); } catch { applyTheme('system'); }
@@ -28,6 +30,7 @@ createRoot(document.getElementById('root')!).render(
     <BrowserRouter>
       <TooltipProvider>
       <Toaster />
+      <ApiGate>
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/" element={<Guard><Dashboard /></Guard>} />
@@ -36,8 +39,10 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/anomalies" element={<Guard><Anomalies /></Guard>} />
         <Route path="/anomalies/:anomalyId" element={<Guard><Investigation /></Guard>} />
         <Route path="/analysis" element={<Guard><Analysis /></Guard>} />
+        <Route path="/pipeline" element={<Guard><Pipeline /></Guard>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      </ApiGate>
       </TooltipProvider>
     </BrowserRouter>
   </StrictMode>,

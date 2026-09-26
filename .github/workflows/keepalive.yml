@@ -1,0 +1,24 @@
+name: Keep API awake
+
+# Render's free plan sleeps a service after 15 min without traffic (~50 s cold start).
+# Pinging /health every 10 min keeps it warm so evaluators never hit a cold start.
+# Set the repository variable API_URL (Settings → Secrets and variables → Actions → Variables),
+# e.g. https://ai-energy-api.onrender.com. The job is a no-op until it is set.
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    if: ${{ vars.API_URL != '' }}
+    steps:
+      - name: GET /health
+        run: |
+          for i in 1 2 3; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 "${{ vars.API_URL }}/health") && [ "$code" = "200" ] && { echo "API awake (200)"; exit 0; }
+            echo "attempt $i -> $code, retrying"; sleep 20
+          done
+          echo "API did not answer 200 after 3 attempts"; exit 1
