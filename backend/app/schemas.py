@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.analytics.evidence import Evidence
 
@@ -76,6 +76,12 @@ class AnomalyRef(BaseModel):
 
 
 class MeterListItem(BaseModel):
+    model_config = ConfigDict(json_schema_extra={"examples": [{
+        "meter_id": "M-109", "name": "Medidor M-109", "location": "Zona 9", "status": "CRITICAL",
+        "total_consumption_kwh": 17526.0, "avg_daily_kwh": 1251.9, "last_day_kwh": 2207.6, "baseline_daily_kwh": 1048.8,
+        "variation_pct": 110.5, "last_reading_at": "2026-09-14T23:00:00",
+        "anomaly": {"id": 1, "type": "REAL_ANOMALY", "severity": "HIGH", "priority": True, "status": "OPEN", "detected_at": "2026-09-12T14:00:00"},
+    }]})
     meter_id: str
     name: str
     location: str | None
@@ -149,19 +155,31 @@ class EventOut(BaseModel):
 
 # ---------- anomalies ----------
 class AnomalySummary(BaseModel):
+    """Shape of an AI finding. Superset of the JSON in the test statement (§10):
+    meter_id, anomaly, type, severity, confidence, reason, recommended_action."""
+    model_config = ConfigDict(json_schema_extra={"examples": [{
+        "id": 1, "rank": 1, "meter_id": "M-109", "meter_name": "Medidor M-109", "anomaly": True,
+        "detected_at": "2026-09-12T14:00:00", "type": "REAL_ANOMALY", "severity": "HIGH", "confidence": 0.81,
+        "priority": True, "status": "OPEN",
+        "reason": "El consumo medio en la ventana fue un 110,4 % superior al baseline horario (≈ 2.227 kWh/día frente a ≈ 1.058 kWh/día) sin evento operativo conocido; el factor de potencia cayó de 0,94 a 0,74.",
+        "recommended_action": "Investigar la instalación y las cargas conectadas y verificar el medidor en campo.",
+        "providers": {"decision": "jev", "explanation": "llm:nvidia/nemotron-3-super-120b-a12b:free"},
+    }]})
+
     id: int
-    rank: int
+    rank: int = Field(description="1 = más urgente dentro del análisis")
     meter_id: str
     meter_name: str
+    anomaly: bool = Field(default=True, description="Siempre true: solo se persisten los medidores con hallazgos (campo del JSON del enunciado)")
     detected_at: datetime
-    type: str
-    severity: str
-    confidence: float
-    priority: bool
-    status: str
+    type: str = Field(description="REAL_ANOMALY | EXPLAINABLE_ANOMALY | FALSE_POSITIVE | DATA_QUALITY")
+    severity: str = Field(description="LOW | MEDIUM | HIGH")
+    confidence: float = Field(ge=0, le=1, description="Producto de la certeza de Jev en tipo, severidad y prioridad (ver ai_meta.confidence_parts)")
+    priority: bool = Field(description="Requiere investigación prioritaria")
+    status: str = Field(description="OPEN | ACKNOWLEDGED | RESOLVED (paso Acción)")
     reason: str
     recommended_action: str
-    providers: dict[str, str]
+    providers: dict[str, str] = Field(description="Quién decidió (jev|rules) y quién explicó (llm:<modelo>|template)")
 
 
 class AnomalyDetail(AnomalySummary):
@@ -185,13 +203,15 @@ class AnomalyPatch(BaseModel):
 
 # ---------- analysis ----------
 class AnalyzeIn(BaseModel):
-    force_refresh: bool = True  # demo default: always call the live providers; False reuses cached answers
+    model_config = ConfigDict(json_schema_extra={"examples": [{"force_refresh": True}]})
+    force_refresh: bool = Field(default=True, description="true: llama a Jev y al LLM en vivo. false: reutiliza respuestas cacheadas para la misma evidencia (tabla ai_cache).")
 
 
 class AnalyzeAccepted(BaseModel):
+    model_config = ConfigDict(json_schema_extra={"examples": [{"analysis_id": "b3412624-fb38-4378-a904-fa764a3362af", "status": "QUEUED", "reused": False}]})
     analysis_id: str
-    status: str
-    reused: bool
+    status: str = Field(description="QUEUED al crear; RUNNING si ya había un análisis activo (reused=true)")
+    reused: bool = Field(description="true cuando se devolvió el análisis ya en curso (idempotente ante doble clic)")
 
 
 class AnalysisRunOut(BaseModel):
@@ -209,6 +229,16 @@ class AnalysisRunOut(BaseModel):
 
 # ---------- dashboard ----------
 class DashboardSummary(BaseModel):
+    model_config = ConfigDict(json_schema_extra={"examples": [{
+        "meters": {"total": 12, "by_status": {"NORMAL": 9, "WARNING": 1, "CRITICAL": 2, "UNKNOWN": 0}},
+        "consumption": {"total_kwh": 155250.9, "period_from": "2026-09-01", "period_to": "2026-09-14", "avg_daily_kwh": 11089.3},
+        "anomalies": {"total": 4, "priority": 2, "by_severity": {"HIGH": 2, "MEDIUM": 1, "LOW": 1},
+                      "by_type": {"REAL_ANOMALY": 1, "DATA_QUALITY": 1, "EXPLAINABLE_ANOMALY": 1, "FALSE_POSITIVE": 1}, "avg_confidence": 0.89, "open": 4},
+        "last_analysis": {"id": "b3412624-…", "status": "COMPLETED", "current_stage": None, "started_at": "2026-09-26T18:52:44",
+                          "finished_at": "2026-09-26T18:53:16", "headline": "4 anomalías detectadas, 2 requieren atención prioritaria",
+                          "providers": {"decision": "jev", "explanation": "llm"}},
+        "ai_mode": {"decision": "jev", "explanation": "llm"},
+    }]})
     meters: dict
     consumption: dict
     anomalies: dict

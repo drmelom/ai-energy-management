@@ -9,8 +9,8 @@ from app.analytics.evidence import Candidate
 from app.ai.jev import JevDecisionProvider
 from app.ai.openrouter import OpenRouterExplanationProvider
 from app.ai.ports import Decision, Explanation, ProviderError
-from app.ai.rules import RulesDecisionProvider, decide_by_rules, violates_guardrail
-from app.ai.templates import TemplateExplanationProvider, explain_by_template
+from app.ai.rules import decide_by_rules, violates_guardrail
+from app.ai.templates import explain_by_template
 from app.config import Settings
 
 log = logging.getLogger(__name__)
@@ -84,6 +84,3 @@ def build_providers(s: Settings) -> tuple[DecisionWithFallback, ExplanationWithF
            if s.openrouter_api_key else None)
     return DecisionWithFallback(jev, s.jev_timeout_seconds), ExplanationWithFallback(llm, s.llm_timeout_seconds)
 
-
-__all__ = ["build_providers", "DecisionWithFallback", "ExplanationWithFallback", "AiCache",
-           "RulesDecisionProvider", "TemplateExplanationProvider"]

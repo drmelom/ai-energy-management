@@ -11,7 +11,7 @@ from app.schemas import EventOut
 router = APIRouter(prefix="/events", tags=["events"])
 
 
-@router.get("", response_model=dict[str, list[EventOut]])
+@router.get("", response_model=dict[str, list[EventOut]], summary="Listar eventos operativos", description="Filtros opcionales `meter_id` y `type`.")
 def list_events(db: Session = Depends(get_db), meter_id: str | None = None, type: str | None = None):
     stmt = select(Event).order_by(Event.timestamp)
     if meter_id:

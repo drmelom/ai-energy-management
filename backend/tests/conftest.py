@@ -15,7 +15,7 @@ DATA = Path(__file__).resolve().parents[1] / "data"
 @pytest.fixture(scope="session")
 def client(tmp_path_factory):
     db = tmp_path_factory.mktemp("db") / "test.db"
-    settings = Settings(_env_file=None, app_env="test", database_url=f"sqlite:///{db.as_posix()}", data_dir=DATA,
+    settings = Settings(_env_file=None, database_url=f"sqlite:///{db.as_posix()}", data_dir=DATA,
                         openrouter_api_key=None, jev_api_key=None, log_level="WARNING")
     with TestClient(create_app(settings)) as c:
         yield c

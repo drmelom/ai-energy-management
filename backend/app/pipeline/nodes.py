@@ -12,7 +12,7 @@ import pandas as pd
 from app.ai.factory import AiCache, DecisionWithFallback, ExplanationWithFallback
 from app.ai.ports import SEVERITY_ORDER, TYPE_ORDER, Decision, Explanation
 from app.analytics.baseline import compute_baselines, prepare
-from app.analytics.correlation import enrich
+from app.analytics.correlation import electrical_context, match_events
 from app.analytics.detectors import Thresholds, build_candidates
 from app.analytics.evidence import Candidate, EventRecord
 from app.pipeline.state import PipelineState
@@ -49,7 +49,6 @@ def make_nodes(load: Loader, decide: DecisionWithFallback, explain: ExplanationW
         return {"candidates": cands, "stage_notes": _note(state, "detection", note)}
 
     def correlation(state: PipelineState) -> dict:
-        from app.analytics.correlation import electrical_context
         cands = state["candidates"]
         df = state["readings"]
         for c in cands:
@@ -61,7 +60,6 @@ def make_nodes(load: Loader, decide: DecisionWithFallback, explain: ExplanationW
         return {"candidates": cands, "stage_notes": _note(state, "correlation", note)}
 
     def events(state: PipelineState) -> dict:
-        from app.analytics.correlation import match_events
         cands = state["candidates"]
         for c in cands:
             if c.has_findings:

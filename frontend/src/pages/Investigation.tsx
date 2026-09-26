@@ -12,10 +12,9 @@ import { BeforeAfterTable, EventsTimeline, EvidenceList } from '../components/Ev
 import { ConfidenceBar } from '../components/HBar';
 import { ElectricalCharts, MeterChart, ReadingsTable } from '../components/MeterChart';
 import { ProbBars } from '../components/ProbBars';
-import { fmtIso, HOUR, parseNaive } from '../lib/fmt';
+import { fmtIso, HOUR, isoLocal, parseNaive } from '../lib/fmt';
 import { eventMarks, segmentBounds, toChartPoints } from '../lib/shape';
 
-const isoLocal = (ms: number) => { const d = new Date(ms); const p = (n: number) => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:00:00`; };
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return <Card><CardHeader><CardTitle className="text-lg">{title}</CardTitle></CardHeader><CardContent>{children}</CardContent></Card>;

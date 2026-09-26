@@ -9,13 +9,12 @@ import { ChartFrame } from '../components/ChartFrame';
 import { SegmentedControl } from '../components/FilterBar';
 import { KpiTile } from '../components/KpiTile';
 import { ElectricalCharts, MeterChart, ReadingsTable } from '../components/MeterChart';
-import { fmtDay, fmtDayHour, fmtKwh, fmtNum, fmtPF, fmtPct, HOUR, parseNaive } from '../lib/fmt';
+import { fmtDay, fmtDayHour, fmtKwh, fmtNum, fmtPF, fmtPct, HOUR, isoLocal, parseNaive } from '../lib/fmt';
 import { eventMarks, segmentBounds, toChartPoints } from '../lib/shape';
 import { useRun } from '../state/run';
 import { useRiseIn } from '../lib/motion';
 
 type Range = 'all' | 'week2' | 'window';
-const isoLocal = (ms: number) => { const d = new Date(ms); const p = (n: number) => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:00:00`; };
 
 export default function MeterDetail() {
   const { meterId = '' } = useParams();

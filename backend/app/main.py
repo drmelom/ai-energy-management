@@ -38,7 +38,28 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         yield
         engine.dispose()
 
-    app = FastAPI(title="AI Energy Management API", version="0.1.0", lifespan=lifespan)
+    app = FastAPI(
+        title="AI Energy Management API",
+        version="1.0.0",
+        summary="Medidores eléctricos + IA para detectar, explicar, priorizar y recomendar acciones sobre anomalías.",
+        description=(
+            "Flujo: **Lecturas → Baseline → Detección → Correlación → Eventos → Explicación → Recomendación**.\n\n"
+            "Las cinco primeras etapas son analítica determinista (pandas). La etapa de explicación usa **Jev** (modelo de decisión, "
+            "TypeSafe AI) para clasificar tipo, severidad y prioridad con probabilidades, y un LLM para redactar la explicación citando "
+            "solo cifras de la evidencia. Sin claves de API todo funciona con reglas y plantillas.\n\n"
+            "Demo: `POST /auth/login` (admin/admin) → `GET /dashboard/summary` → `POST /ai/analyze` → `GET /ai/analysis/{id}` "
+            "(polling) → `GET /anomalies` → `GET /anomalies/{id}` → `PATCH /anomalies/{id}`."
+        ),
+        openapi_tags=[
+            {"name": "auth", "description": "Login demo. El token es estático y no se verifica en el resto de endpoints."},
+            {"name": "dashboard", "description": "KPIs agregados y salud del servicio (modo IA activo)."},
+            {"name": "meters", "description": "Gestión de medidores: listado con filtros/orden, detalle con baseline, lecturas con resolución y eventos."},
+            {"name": "events", "description": "Eventos operativos conocidos (events.csv)."},
+            {"name": "anomalies", "description": "Hallazgos del último análisis, con evidencia, distribución de probabilidad de Jev y cambio de estado (Acción)."},
+            {"name": "ai", "description": "Ejecución del pipeline de análisis (asíncrono, pollable, idempotente)."},
+        ],
+        lifespan=lifespan,
+    )
     # any localhost/127.0.0.1 port is allowed in addition to CORS_ORIGINS, so a Vite server on 5174 still works
     app.add_middleware(CORSMiddleware, allow_origins=settings.cors_origins,
                        allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?", allow_methods=["*"], allow_headers=["*"])

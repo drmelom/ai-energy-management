@@ -7,7 +7,6 @@ interface RunState {
   active: boolean;                 // QUEUED | RUNNING
   start: (forceRefresh?: boolean) => Promise<string>;
   version: number;                 // bumps when a run completes → pages refetch
-  providers: { decision: string; explanation: string } | null;
 }
 
 const Ctx = createContext<RunState | null>(null);
@@ -15,7 +14,6 @@ const Ctx = createContext<RunState | null>(null);
 export function RunProvider({ children }: { children: ReactNode }) {
   const [run, setRun] = useState<AnalysisRun | null>(null);
   const [version, setVersion] = useState(0);
-  const [providers, setProviders] = useState<RunState['providers']>(null);
   const timer = useRef<number | null>(null);
 
   const stop = () => { if (timer.current) { window.clearInterval(timer.current); timer.current = null; } };
@@ -34,7 +32,6 @@ export function RunProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    api.health().then(h => setProviders(h.providers)).catch(() => undefined);
     api.runs(1).then(({ items }) => {
       const last = items[0];
       if (!last) return;
@@ -51,7 +48,7 @@ export function RunProvider({ children }: { children: ReactNode }) {
   }, [watch]);
 
   const active = !!run && (run.status === 'QUEUED' || run.status === 'RUNNING');
-  return <Ctx.Provider value={{ run, active, start, version, providers }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ run, active, start, version }}>{children}</Ctx.Provider>;
 }
 
 export function useRun(): RunState {

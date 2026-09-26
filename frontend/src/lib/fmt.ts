@@ -6,6 +6,8 @@ export const parseNaive = (s: string): number => {
   return new Date(y, m - 1, dd, h, mi, Math.floor(sec), Math.round((sec % 1) * 1000)).getTime();
 };
 export const hourOf = (s: string) => Number(s.slice(11, 13));
+/** Local ms → naive ISO at the top of the hour (for `from`/`to` query params). */
+export const isoLocal = (ms: number) => { const d = new Date(ms); const p = (n: number) => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:00:00`; };
 export const HOUR = 3_600_000;
 
 const nf1 = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 1 });
@@ -14,7 +16,6 @@ const pf1 = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 1, signDispl
 export const fmtNum = (v: number, d = 1) => (d === 0 ? nf0 : nf1).format(v);
 export const fmtKwh = (v: number, d = 1) => `${fmtNum(v, d)} kWh`;
 export const fmtPct = (v: number) => `${pf1.format(v)} %`;
-export const fmtPctAbs = (v: number) => `${nf0.format(v)} %`;
 export const fmtPF = (v: number) => v.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 export const fmtV = (v: number) => `${fmtNum(v, 1)} V`;
 export const fmtA = (v: number) => `${fmtNum(v, 0)} A`;

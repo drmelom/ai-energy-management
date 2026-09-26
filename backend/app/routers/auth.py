@@ -8,7 +8,7 @@ from app.schemas import LoginIn, LoginOut
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-@router.post("/login", response_model=LoginOut)
+@router.post("/login", response_model=LoginOut, summary="Login demo", description="Credenciales por defecto `admin` / `admin` (configurables por entorno). 401 `INVALID_CREDENTIALS`.")
 def login(body: LoginIn, request: Request):
     s = request.app.state.settings
     if body.username != s.demo_user or body.password != s.demo_password:

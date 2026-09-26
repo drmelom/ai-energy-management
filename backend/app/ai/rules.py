@@ -51,13 +51,6 @@ def decide_by_rules(c: Candidate, notes: list[str] | None = None) -> Decision:
     )
 
 
-class RulesDecisionProvider:
-    name = "rules"
-
-    async def decide(self, candidate: Candidate) -> Decision:
-        return decide_by_rules(candidate)
-
-
 def violates_guardrail(c: Candidate, d: Decision) -> str | None:
     """G1: explained types need an explaining event. G2: DATA_QUALITY needs at least one DQ signal."""
     if d.type in {"EXPLAINABLE_ANOMALY", "FALSE_POSITIVE"} and c.explaining_event is None:

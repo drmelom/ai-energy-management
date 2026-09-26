@@ -39,9 +39,3 @@ def explain_by_template(c: Candidate, d: Decision, notes: list[str] | None = Non
         action = "Revisar el medidor y su comunicación; poner en cuarentena las lecturas del periodo antes de facturar."
     return Explanation(reason=reason, recommended_action=action, provider="template", notes=list(notes or []))
 
-
-class TemplateExplanationProvider:
-    name = "template"
-
-    async def explain(self, candidate: Candidate, decision: Decision) -> Explanation:
-        return explain_by_template(candidate, decision)
