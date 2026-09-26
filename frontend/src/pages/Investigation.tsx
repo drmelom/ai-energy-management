@@ -12,7 +12,6 @@ import { BeforeAfterTable, EventsTimeline, EvidenceList } from '../components/Ev
 import { ConfidenceBar } from '../components/HBar';
 import { ElectricalCharts, MeterChart, ReadingsTable } from '../components/MeterChart';
 import { ProbBars } from '../components/ProbBars';
-import { ProviderBadge } from '../components/ProviderBadge';
 import { fmtIso, HOUR, parseNaive } from '../lib/fmt';
 import { eventMarks, segmentBounds, toChartPoints } from '../lib/shape';
 
@@ -64,10 +63,6 @@ export default function Investigation() {
             <TypeBadge type={d.type} /><SeverityBadge severity={d.severity} priority={d.priority} />
             {d.priority && <Badge tone="critical"><Flag className="size-3" />Prioritaria</Badge>}
             <span className="flex items-center gap-2 text-xs text-muted-foreground">Confianza <ConfidenceBar confidence={d.confidence} width={120} /></span>
-            <span className="ml-auto flex gap-1.5 flex-wrap">
-              <ProviderBadge kind="decision" provider={d.ai_meta.decision_provider} notes={d.ai_meta.fallback_notes.filter(n => n.startsWith('jev') || n.startsWith('guardrail'))} latencyMs={d.ai_meta.latency_ms.decision} cached={d.ai_meta.cached?.decision} />
-              <ProviderBadge kind="explanation" provider={d.ai_meta.explanation_provider} notes={d.ai_meta.fallback_notes.filter(n => n.startsWith('llm'))} latencyMs={d.ai_meta.latency_ms.explanation} cached={d.ai_meta.cached?.explanation} />
-            </span>
           </div>
           <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]">
             <div className="flex flex-col gap-4 min-w-0">
@@ -89,13 +84,10 @@ export default function Investigation() {
               <Section title="Antes / después"><BeforeAfterTable items={d.evidence} /></Section>
             </div>
             <aside className="flex flex-col gap-4 min-w-0">
-              <Section title="Decisión de la IA"><ProbBars meta={d.ai_meta} winner={d.type} severity={d.severity} /></Section>
-              <Section title="Proveedores">
-                <div className="flex flex-col gap-1.5 text-xs text-muted-foreground">
-                  <div>Decisión: <b className="text-foreground">{d.ai_meta.decision_provider === 'jev' ? 'Jev (TypeSafe AI)' : 'reglas deterministas'}</b> · {d.ai_meta.latency_ms.decision} ms</div>
-                  <div>Explicación: <b className="text-foreground break-all">{d.ai_meta.explanation_provider.startsWith('llm') ? d.ai_meta.explanation_provider.slice(4) : 'plantilla'}</b> · {d.ai_meta.latency_ms.explanation} ms</div>
-                  {d.ai_meta.fallback_notes.length > 0 && <div className="text-warning-ink flex items-center gap-1"><TriangleAlert className="size-3" />{d.ai_meta.fallback_notes.join(' · ')}</div>}
-                </div>
+              <Section title="Decisión de la IA">
+                <ProbBars meta={d.ai_meta} winner={d.type} severity={d.severity} />
+                <p className="text-xs text-muted-foreground mt-3">Tiempo de análisis: <span className="num text-foreground">{d.ai_meta.latency_ms.decision + d.ai_meta.latency_ms.explanation} ms</span></p>
+                {d.ai_meta.fallback_notes.length > 0 && <p className="text-xs text-warning-ink flex items-center gap-1 mt-1"><TriangleAlert className="size-3" />Se usó el respaldo determinista en este caso.</p>}
               </Section>
               <Section title="Eventos relacionados"><EventsTimeline events={d.events_matched} anchor={d.window.from} /></Section>
               <Section title="Acción recomendada">

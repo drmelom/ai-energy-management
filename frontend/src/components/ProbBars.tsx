@@ -6,7 +6,7 @@ import { Icon } from './Icon';
 
 export function ProbBars({ meta, winner, severity }: { meta: AiMeta; winner: AnomalyType; severity: string }) {
   if (!meta.decision_probabilities) {
-    return <p className="text-xs text-muted-foreground">Decidido por reglas — sin distribución de probabilidad. {meta.fallback_notes.length > 0 && <span className="text-warning-ink">({meta.fallback_notes.join(', ')})</span>}</p>;
+    return <p className="text-xs text-muted-foreground">Clasificado con reglas deterministas — sin distribución de probabilidad.</p>;
   }
   const probs = meta.decision_probabilities;
   return (

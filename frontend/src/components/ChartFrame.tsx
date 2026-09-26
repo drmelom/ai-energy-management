@@ -1,4 +1,5 @@
-import { useId, useState, type ReactNode } from 'react';
+import { useId, useRef, useState, type ReactNode } from 'react';
+import { useRiseIn } from '../lib/motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -12,6 +13,8 @@ export function ChartFrame({ title, subtitle, legend = [], controls, ariaDescrip
 }) {
   const id = useId();
   const [showTable, setShowTable] = useState(false);
+  const body = useRef<HTMLDivElement>(null);
+  useRiseIn(body, ':scope > *', [state === 'ready']);
   return (
     <Card className="gap-3" role="figure" aria-labelledby={`${id}-t`} aria-description={ariaDescription}>
       <CardHeader className="flex flex-row flex-wrap items-start gap-3">
@@ -35,7 +38,7 @@ export function ChartFrame({ title, subtitle, legend = [], controls, ariaDescrip
         </div>
       </CardHeader>
       <CardContent>
-        <div style={{ height }}>
+        <div ref={body} style={{ height }}>
           {state === 'loading' && !children && <Skeleton className="h-full w-full" />}
           {state === 'empty' && <div className="h-full grid place-items-center text-muted-foreground">Sin lecturas en el rango</div>}
           {state === 'error' && <div className="h-full grid place-items-center text-critical-ink">No se pudieron cargar las lecturas</div>}

@@ -7,8 +7,7 @@ import { Label } from '@/components/ui/label';
 import { api, useQuery } from '../api/client';
 import { AnalysisStepper, RunError, RunHeadline } from '../components/AnalysisStepper';
 import { AppShell } from '../components/AppShell';
-import { ProviderBadge } from '../components/ProviderBadge';
-import { fmtIso } from '../lib/fmt';
+import { fmtBogota } from '../lib/fmt';
 import { useRun } from '../state/run';
 
 export default function Analysis() {
@@ -22,7 +21,7 @@ export default function Analysis() {
   return (
     <AppShell title="Análisis IA">
       <div className="flex items-center gap-3 flex-wrap">
-        <p className="text-muted-foreground max-w-[70ch]">Lecturas → Baseline → Detección → Correlación → Eventos → Explicación → Recomendación. Las cinco primeras etapas son analítica determinista; Jev decide el tipo, la severidad y la prioridad; un LLM redacta la explicación citando solo cifras de la evidencia.</p>
+        <p className="text-muted-foreground max-w-[70ch]">Lecturas → Baseline → Detección → Correlación → Eventos → Explicación → Recomendación. Las cinco primeras etapas son analítica determinista; la IA clasifica tipo, severidad y prioridad y redacta la explicación citando solo cifras de la evidencia.</p>
         <div className="ml-auto flex items-center gap-3 flex-wrap">
           <Label className="flex items-center gap-2 text-xs text-muted-foreground font-normal" title="Desactivado: reutiliza respuestas de IA ya calculadas para la misma evidencia (caché por hash). Activado: siempre llama a los proveedores en vivo.">
             <Checkbox checked={force} onCheckedChange={v => setForce(v === true)} />Llamar a la IA en vivo (sin caché)
@@ -37,10 +36,9 @@ export default function Analysis() {
       {run ? (
         <>
           <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
-            <ProviderBadge kind="decision" provider={run.providers.decision} /><ProviderBadge kind="explanation" provider={run.providers.explanation} />
-            <span>· iniciado {fmtIso(run.started_at)} UTC</span>{run.finished_at && <span>· finalizado {fmtIso(run.finished_at)} UTC</span>}
+            <span>Iniciado {fmtBogota(run.started_at)}</span>{run.finished_at && <span>· finalizado {fmtBogota(run.finished_at)}</span>}<span>· hora Colombia</span>
             {!run.force_refresh && <span>· con caché</span>}
-            {degraded && <span className="text-warning-ink">· algún proveedor cayó a fallback (punto ámbar en Explicación)</span>}
+            {degraded && <span className="text-warning-ink">· en algún caso se usó el respaldo determinista (punto ámbar en Explicación)</span>}
           </div>
           <AnalysisStepper run={run} degraded={degraded} />
         </>

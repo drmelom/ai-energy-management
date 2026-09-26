@@ -26,6 +26,10 @@ export const fmtDay = (ms: number) => { const d = new Date(ms); return `${p2(d.g
 export const fmtDayHour = (ms: number) => { const d = new Date(ms); return `${fmtDay(ms)} ${p2(d.getHours())}:${p2(d.getMinutes())}`; };
 export const fmtTs = (ms: number) => `${WD[new Date(ms).getDay()]} ${fmtDayHour(ms)}`;
 export const fmtIso = (iso: string) => fmtDayHour(parseNaive(iso));
+const utcMs = (iso: string) => { const [y, m, d, h, mi, s = 0] = iso.slice(0, 19).split(/[-T:]/).map(Number); return Date.UTC(y, m - 1, d, h, mi, s); };
+const dfBogota = new Intl.DateTimeFormat('es-CO', { timeZone: 'America/Bogota', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
+/** Server timestamps are UTC naive; show them in Colombia time. */
+export const fmtBogota = (iso: string) => dfBogota.format(utcMs(iso)).replace(',', '');
 export const fmtDur = (s: number) => (s < 1 ? `${Math.round(s * 1000)} ms` : `${s.toLocaleString('es-CO', { maximumFractionDigits: 1 })} s`);
 
 export const relTime = (iso: string) => {

@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Activity, Cpu, LayoutDashboard, List, LogOut, Moon, Monitor, Play, Siren, Sun, Zap } from 'lucide-react';
+import { Cpu, LayoutDashboard, List, LogOut, Moon, Monitor, Play, Siren, Sun, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -10,7 +10,6 @@ import {
   SidebarMenu, SidebarMenuBadge, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarRail, SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { useRun } from '../state/run';
-import { ProviderBadge } from './ProviderBadge';
 
 const NAV = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -40,7 +39,6 @@ export function RunButton({ size = 'default' }: { size?: 'default' | 'sm' }) {
 }
 
 export function AppShell({ title, crumbs, children, priorityCount }: { title: string; crumbs?: { label: string; to?: string }[]; children: ReactNode; priorityCount?: number }) {
-  const { providers } = useRun();
   const nav = useNavigate();
   const { pathname } = useLocation();
   const [theme, setTheme] = useState<Theme>(readTheme);
@@ -85,13 +83,7 @@ export function AppShell({ title, crumbs, children, priorityCount }: { title: st
           </SidebarGroup>
         </SidebarContent>
         <SidebarFooter>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Modo IA" className="text-xs text-muted-foreground">
-                <Activity /><span>{providers ? `${providers.decision === 'jev' ? 'Jev' : 'Reglas'} · ${providers.explanation === 'llm' ? 'LLM' : 'Plantilla'}` : '…'}</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
+          <p className="px-2 text-[11px] text-muted-foreground group-data-[collapsible=icon]:hidden">MVP · datos 01–14/09/2026</p>
         </SidebarFooter>
         <SidebarRail />
       </Sidebar>
@@ -111,7 +103,6 @@ export function AppShell({ title, crumbs, children, priorityCount }: { title: st
             </BreadcrumbList>
           </Breadcrumb>
           <div className="ml-auto flex items-center gap-2">
-            {providers && <span className="hidden lg:flex gap-1.5"><ProviderBadge kind="decision" provider={providers.decision} /><ProviderBadge kind="explanation" provider={providers.explanation} /></span>}
             <RunButton />
             <DropdownMenu>
               <DropdownMenuTrigger render={<Button variant="outline" size="icon" className="rounded-full text-xs font-semibold" aria-label="Operador demo" />}>OD</DropdownMenuTrigger>

@@ -1,6 +1,10 @@
 import { Area, CartesianGrid, ComposedChart, Line, ReferenceArea, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { fmtDay, fmtKwh, fmtNum, fmtPct, fmtTs, fmtV, fmtA, fmtPF } from '../lib/fmt';
 import { dayTicks, voltageDomain, yMaxRound, type ChartPoint, type EventMark, type SegmentMark } from '../lib/shape';
+import { prefersReducedMotion } from '../lib/motion';
+
+// Series draw in on mount (and on data change); off for users who prefer reduced motion.
+const anim = () => ({ isAnimationActive: !prefersReducedMotion(), animationDuration: 900, animationEasing: 'ease-out' as const });
 
 const MARGIN = { top: 20, right: 16, bottom: 4, left: 8 };
 const tick = { fill: 'var(--muted-foreground)', fontSize: 12 };
@@ -24,10 +28,10 @@ function TooltipBox({ active, payload, rows }: { active?: boolean; payload?: { p
   );
 }
 
-function SegmentLabel({ viewBox, seg }: { viewBox?: { x: number; y: number }; seg: SegmentMark }) {
+function SegmentLabel({ viewBox, seg }: { viewBox?: { x: number; y: number; width: number }; seg: SegmentMark }) {
   if (!viewBox) return null;
   return (
-    <text x={viewBox.x + 4} y={viewBox.y + 12} fontSize={11} fontWeight={600} fill="var(--foreground)">
+    <text x={viewBox.x + viewBox.width - 4} y={viewBox.y + 12} textAnchor="end" fontSize={11} fontWeight={600} fill="var(--foreground)">
       {seg.label}{seg.pct != null ? ` ${fmtPct(seg.pct)}` : ''}
     </text>
   );
@@ -59,10 +63,10 @@ export function MeterChart({ points, resolution, segment, events, syncId, height
         <CartesianGrid stroke="var(--grid)" vertical={false} />
         <XAxis dataKey="t" type="number" scale="time" domain={['dataMin', 'dataMax']} ticks={dayTicks(points)} tickFormatter={fmtDay} tick={tick} axisLine={axisLine} tickLine={false} />
         <YAxis domain={[0, yMaxRound]} tick={tick} axisLine={false} tickLine={false} tickFormatter={v => fmtNum(v, 0)} width={44} />
-        <Area dataKey="band" stroke="none" fill="var(--band)" isAnimationActive={false} activeDot={false} legendType="none" />
-        <Line dataKey="baseline" stroke="var(--baseline)" strokeWidth={2} dot={false} isAnimationActive={false} activeDot={false} />
-        <Area dataKey="kwh" stroke="none" fill="var(--brand-wash)" isAnimationActive={false} activeDot={false} />
-        <Line dataKey="kwh" stroke="var(--brand)" strokeWidth={2} dot={daily ? { r: 4, strokeWidth: 2, stroke: 'var(--card)', fill: 'var(--brand)' } : false} isAnimationActive={false} />
+        <Area dataKey="band" stroke="none" fill="var(--band)" {...anim()} activeDot={false} legendType="none" />
+        <Line dataKey="baseline" stroke="var(--baseline)" strokeWidth={2} dot={false} {...anim()} activeDot={false} />
+        <Area dataKey="kwh" stroke="none" fill="var(--brand-wash)" {...anim()} activeDot={false} />
+        <Line dataKey="kwh" stroke="var(--brand)" strokeWidth={2} dot={daily ? { r: 4, strokeWidth: 2, stroke: 'var(--card)', fill: 'var(--brand)' } : false} {...anim()} />
         <Marks segment={segment} events={events} />
         <Tooltip cursor={{ stroke: 'var(--axis)' }} content={<TooltipBox rows={(p: ChartPoint) => {
           const inWin = segment && p.t >= segment.x1 && p.t < segment.x2;
@@ -98,8 +102,8 @@ export function ElectricalCharts({ points, segment, events, syncId }: { points: 
           <ReferenceArea y1={vLo} y2={209} fill="var(--critical)" fillOpacity={0.08} />
           <ReferenceLine y={220} stroke="var(--axis)" strokeWidth={1} />
           <Marks segment={segment} events={events} flags={false} />
-          <Line dataKey="baseline_v" stroke="var(--baseline)" strokeWidth={1.5} dot={false} isAnimationActive={false} activeDot={false} />
-          <Line dataKey="v" stroke="var(--muted-foreground)" strokeWidth={1.5} dot={false} isAnimationActive={false} />
+          <Line dataKey="baseline_v" stroke="var(--baseline)" strokeWidth={1.5} dot={false} {...anim()} activeDot={false} />
+          <Line dataKey="v" stroke="var(--muted-foreground)" strokeWidth={1.5} dot={false} {...anim()} />
           <Tooltip cursor={{ stroke: 'var(--axis)' }} content={<TooltipBox rows={(p: ChartPoint) => [
             { name: 'Tensión', value: fmtV(p.v), color: 'var(--muted-foreground)', strong: true, tone: p.v < 209 || p.v > 231 ? 'text-critical-ink font-semibold' : undefined },
             ...(p.baseline_v != null ? [{ name: 'Baseline', value: fmtV(p.baseline_v), color: 'var(--baseline)' }] : []),
@@ -113,8 +117,8 @@ export function ElectricalCharts({ points, segment, events, syncId }: { points: 
           <SmallAxis points={points} last={false} />
           <YAxis domain={[0, 'auto']} tick={tick} axisLine={false} tickLine={false} tickFormatter={v => fmtNum(v, 0)} width={44} />
           <Marks segment={segment} events={events} flags={false} />
-          <Line dataKey="baseline_i" stroke="var(--baseline)" strokeWidth={1.5} dot={false} isAnimationActive={false} activeDot={false} />
-          <Line dataKey="i" stroke="var(--muted-foreground)" strokeWidth={1.5} dot={false} isAnimationActive={false} />
+          <Line dataKey="baseline_i" stroke="var(--baseline)" strokeWidth={1.5} dot={false} {...anim()} activeDot={false} />
+          <Line dataKey="i" stroke="var(--muted-foreground)" strokeWidth={1.5} dot={false} {...anim()} />
           <Tooltip cursor={{ stroke: 'var(--axis)' }} content={<TooltipBox rows={(p: ChartPoint) => [
             { name: 'Corriente', value: fmtA(p.i), color: 'var(--muted-foreground)', strong: true },
             ...(p.baseline_i != null ? [{ name: 'Baseline', value: fmtA(p.baseline_i), color: 'var(--baseline)' }] : []),
@@ -130,8 +134,8 @@ export function ElectricalCharts({ points, segment, events, syncId }: { points: 
           <ReferenceArea y1={0.5} y2={0.8} fill="var(--critical)" fillOpacity={0.08} />
           <ReferenceLine y={0.8} stroke="var(--axis)" strokeWidth={1} />
           <Marks segment={segment} events={events} flags={false} />
-          <Line dataKey="baseline_pf" stroke="var(--baseline)" strokeWidth={1.5} dot={false} isAnimationActive={false} activeDot={false} />
-          <Line dataKey="pf" stroke="var(--muted-foreground)" strokeWidth={1.5} dot={false} isAnimationActive={false} />
+          <Line dataKey="baseline_pf" stroke="var(--baseline)" strokeWidth={1.5} dot={false} {...anim()} activeDot={false} />
+          <Line dataKey="pf" stroke="var(--muted-foreground)" strokeWidth={1.5} dot={false} {...anim()} />
           <Tooltip cursor={{ stroke: 'var(--axis)' }} content={<TooltipBox rows={(p: ChartPoint) => [
             { name: 'Factor de potencia', value: fmtPF(p.pf), color: 'var(--muted-foreground)', strong: true, tone: p.pf < 0.8 ? 'text-critical-ink font-semibold' : undefined },
             ...(p.baseline_pf != null ? [{ name: 'Baseline', value: fmtPF(p.baseline_pf), color: 'var(--baseline)' }] : []),

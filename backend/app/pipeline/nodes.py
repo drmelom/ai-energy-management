@@ -102,8 +102,10 @@ def make_nodes(load: Loader, decide: DecisionWithFallback, explain: ExplanationW
         n_jev = sum(d.provider == "jev" for d in decisions.values())
         n_llm = sum(e.provider.startswith("llm") for e in explanations.values())
         n_cached = sum(any(cc.values()) for cc in ai_cached.values())
-        note = (f"{len(cands)} casos · {n_jev} decididos por Jev, {len(cands) - n_jev} por reglas · "
-                f"{n_llm} explicados por LLM, {len(cands) - n_llm} por plantilla" + (f" · {n_cached} desde caché" if n_cached else ""))
+        fallback = (len(cands) - n_jev) + (len(cands) - n_llm)
+        note = (f"{len(cands)} casos clasificados y explicados por IA"
+                + (f" · {fallback} con respaldo determinista" if fallback else "")
+                + (f" · {n_cached} desde caché" if n_cached else ""))
         return {"decisions": decisions, "explanations": explanations, "ai_cached": ai_cached,
                 "stage_notes": _note(state, "explanation", note)}
 
