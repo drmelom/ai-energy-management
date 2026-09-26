@@ -11,6 +11,7 @@ import re
 import time
 
 import httpx
+import openai
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field
 
@@ -90,12 +91,14 @@ class OpenRouterExplanationProvider:
         try:
             async with self._sem:
                 res = await self._llm.ainvoke([("system", SYSTEM_PROMPT), ("user", user_prompt(candidate, decision))])
-        except (asyncio.TimeoutError, httpx.TimeoutException, httpx.ConnectError) as e:
+        except (asyncio.TimeoutError, httpx.TimeoutException, httpx.ConnectError, openai.APITimeoutError) as e:
             raise ProviderError("llm:timeout", retryable=True) from e
+        except openai.APIConnectionError as e:
+            raise ProviderError("llm:connection", retryable=True) from e
+        except openai.APIStatusError as e:
+            retry = e.status_code == 429 or 500 <= e.status_code < 600
+            raise ProviderError(f"llm:http_{e.status_code}", retryable=retry) from e
         except Exception as e:  # noqa: BLE001
-            status = getattr(e, "status_code", None) or getattr(getattr(e, "response", None), "status_code", None)
-            if status and 500 <= int(status) < 600 or status == 429:
-                raise ProviderError(f"llm:http_{status}", retryable=True) from e
             raise ProviderError(f"llm:{type(e).__name__}", retryable=False) from e
 
         parsed: ExplanationOut | None = res.get("parsed")

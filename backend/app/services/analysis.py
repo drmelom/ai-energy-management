@@ -100,6 +100,7 @@ class AnalysisRunner:
             self._fail(run_id, "PIPELINE_ERROR", str(e)[:300])
 
     async def _run_graph(self, run_id: str, force_refresh: bool) -> None:
+        log.info("run.start run_id=%s force_refresh=%s", run_id, force_refresh)
         self._stage(run_id, STAGES[0], "running")
         final_state: dict = {}
         async for update_ in self.graph.astream({"run_id": run_id, "force_refresh": force_refresh}, stream_mode="updates"):
