@@ -1,0 +1,116 @@
+"""LLM explanation adapter via OpenRouter (OpenAI-compatible).
+
+The LLM only writes prose. It receives the decision already made and the
+Spanish evidence, and must reuse those figures. A validator rejects any
+number that does not appear in the evidence, falling back to templates.
+"""
+from __future__ import annotations
+
+import asyncio
+import re
+import time
+
+import httpx
+from langchain_openai import ChatOpenAI
+from pydantic import BaseModel, Field
+
+from app.analytics.evidence import Candidate
+from app.ai.ports import Decision, Explanation, ProviderError
+
+SYSTEM_PROMPT = (
+    "Eres un analista senior de energía de una compañía eléctrica. Recibes la clasificación ya decidida de un caso "
+    "y la evidencia numérica calculada por el sistema. Redacta en español: (1) reason: máximo dos frases que expliquen "
+    "la clasificación citando al menos una cifra de la evidencia; (2) recommended_action: una frase imperativa, coherente "
+    "con el tipo y la severidad. Reglas: usa únicamente las cifras que aparecen en la evidencia, escritas exactamente igual, "
+    "nunca inventes ni redondees de otra forma; no contradigas la clasificación; no menciones que eres una IA."
+)
+
+ACTION_GUIDE = {
+    "REAL_ANOMALY": "investigar la instalación y las cargas conectadas; verificar el medidor en campo",
+    "EXPLAINABLE_ANOMALY": "actualizar el baseline del medidor y revisar contrato/potencia; sin intervención en campo",
+    "FALSE_POSITIVE": "cerrar sin acción y registrar como evento planificado",
+    "DATA_QUALITY": "revisar medidor y comunicaciones; poner las lecturas del periodo en cuarentena antes de facturar",
+}
+
+
+class ExplanationOut(BaseModel):
+    reason: str = Field(description="Máximo dos frases, en español, citando al menos una cifra de la evidencia.")
+    recommended_action: str = Field(description="Una frase imperativa en español.")
+
+
+_NUM = re.compile(r"[-+±]?\d[\d.,]*")
+
+
+def _parse_numbers(text: str) -> set[float]:
+    """Every plausible reading of each numeric token (es/en thousands and decimal separators)."""
+    out: set[float] = set()
+    for tok in _NUM.findall(text):
+        tok = tok.strip("+-±").rstrip(".,")
+        if not tok:
+            continue
+        variants = {tok.replace(".", "").replace(",", "."), tok.replace(",", ""), tok.replace(".", ",").replace(",", ".", 1)}
+        for v in variants:
+            try:
+                out.add(round(float(v), 2))
+            except ValueError:
+                pass
+    return out
+
+
+def numbers_are_grounded(text: str, evidence_text: str, tol: float = 0.05) -> bool:
+    allowed = _parse_numbers(evidence_text) | {float(h) for h in range(0, 25)}  # small hour counts are fine
+    for n in _parse_numbers(text):
+        if not any(abs(n - a) <= tol or (a and abs(n / a - 1) <= 0.005) for a in allowed):
+            return False
+    return True
+
+
+def user_prompt(c: Candidate, d: Decision) -> str:
+    events = "\n".join(f"- {e.type} ({rel}) el {e.timestamp:%d/%m %H:%M}: {e.description}" for e, rel in c.events) or "- ninguno"
+    return (
+        f"Medidor: {c.meter_id}\nClasificación: {d.type}\nSeveridad: {d.severity}\nPrioridad: {'sí' if d.priority else 'no'}\n\n"
+        f"Evidencia:\n{c.evidence_text('es')}\n\nEventos registrados:\n{events}\n\n"
+        f"Guía de acción para este tipo: {ACTION_GUIDE[d.type]}."
+    )
+
+
+class OpenRouterExplanationProvider:
+    name = "llm"
+
+    def __init__(self, api_key: str, base_url: str, models: list[str], timeout: float, max_concurrency: int = 4):
+        self._models = models
+        self._llm = ChatOpenAI(
+            base_url=base_url, api_key=api_key, model=models[0], timeout=timeout, max_retries=0, temperature=0.2,
+            extra_body={"models": models, "provider": {"require_parameters": True}},
+        ).with_structured_output(ExplanationOut, method="json_schema", include_raw=True)
+        self._sem = asyncio.Semaphore(max_concurrency)
+
+    async def explain(self, candidate: Candidate, decision: Decision) -> Explanation:
+        t0 = time.perf_counter()
+        try:
+            async with self._sem:
+                res = await self._llm.ainvoke([("system", SYSTEM_PROMPT), ("user", user_prompt(candidate, decision))])
+        except (asyncio.TimeoutError, httpx.TimeoutException, httpx.ConnectError) as e:
+            raise ProviderError("llm:timeout", retryable=True) from e
+        except Exception as e:  # noqa: BLE001
+            status = getattr(e, "status_code", None) or getattr(getattr(e, "response", None), "status_code", None)
+            if status and 500 <= int(status) < 600 or status == 429:
+                raise ProviderError(f"llm:http_{status}", retryable=True) from e
+            raise ProviderError(f"llm:{type(e).__name__}", retryable=False) from e
+
+        parsed: ExplanationOut | None = res.get("parsed")
+        raw = res.get("raw")
+        if parsed is None or not parsed.reason.strip() or not parsed.recommended_action.strip():
+            raise ProviderError("llm:empty_output", retryable=False)
+        if len(parsed.reason) > 400:
+            raise ProviderError("llm:too_long", retryable=False)
+        if not numbers_are_grounded(parsed.reason + " " + parsed.recommended_action, candidate.evidence_text("es")):
+            raise ProviderError("llm:invalid_numbers", retryable=False)
+
+        model = (getattr(raw, "response_metadata", {}) or {}).get("model_name") or self._models[0]
+        return Explanation(
+            reason=parsed.reason.strip(),
+            recommended_action=parsed.recommended_action.strip(),
+            provider=f"llm:{model}",
+            latency_ms=int((time.perf_counter() - t0) * 1000),
+        )
