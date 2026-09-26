@@ -90,12 +90,19 @@ class JevDecisionProvider:
         t = r.answers["type"]
         s = r.answers["severity"]
         p = r.answers["priority"]
-        severity = SEVERITY_LEVELS[min(2, max(0, round(s.score)))]
+        sev_idx = min(2, max(0, round(s.score)))
+        severity = SEVERITY_LEVELS[sev_idx]
+        priority = p.noul >= 0.5
+        # Confidence = joint probability of the three answers Jev gave:
+        # P(chosen type) x P(chosen severity level) x P(the priority answer it committed to).
+        p_type = float(t.probabilities.get(t.choice, t.confidence))
+        p_sev = float(s.probabilities.get(sev_idx, s.probabilities.get(str(sev_idx), s.confidence)))
+        p_prio = float(p.noul if priority else 1 - p.noul)
         return Decision(
             type=t.choice,
             severity=severity,
-            priority=p.noul >= 0.5,
-            confidence=round(float(t.confidence), 2),  # Jev's calibrated confidence, not the (often saturated) P(type)
+            priority=priority,
+            confidence=round(p_type * p_sev * p_prio, 2),
             type_probabilities={k: round(v, 3) for k, v in t.probabilities.items()},
             severity_probabilities={SEVERITY_LEVELS[int(k)]: round(v, 3) for k, v in s.probabilities.items() if int(k) < 3},
             priority_probability=round(p.noul, 3),

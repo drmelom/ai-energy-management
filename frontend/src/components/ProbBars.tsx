@@ -32,6 +32,7 @@ export function ProbBars({ meta, winner, severity }: { meta: AiMeta; winner: Ano
             </div>
           ))}
           {meta.priority_probability != null && <div className="text-muted-foreground mt-1">Prioridad: <span className="num text-foreground font-semibold">{Math.round(meta.priority_probability * 100)} %</span></div>}
+          <p className="text-muted-foreground mt-2">Confianza = P(tipo) × P(severidad) × P(prioridad decidida).</p>
         </div>
       </details>
     </div>

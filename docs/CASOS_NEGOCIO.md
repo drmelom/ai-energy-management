@@ -89,6 +89,6 @@ Ninguno aparece en anomalías, y eso también es un resultado: sus desvíos diar
 
 El resultado, "4 anomalías detectadas, 2 requieren atención prioritaria", es lo que el enunciado pide como ejemplo final.
 
-## Sobre la confianza del 100 %
+## Sobre la confianza
 
-La confianza la calcula el modelo de decisión, no se inventa. Sale al máximo en los cuatro casos porque el motor analítico le entrega evidencia sin ambigüedad: eventos que coinciden a la hora exacta, magnitudes del doble o del 80 %, y señales eléctricas contundentes. Con datos de producción, más ruidosos y con eventos mal registrados, la confianza bajaría y el operador vería un 70 % u 80 % que le indica dónde mirar con más cuidado.
+La confianza no se inventa: es la probabilidad conjunta de las tres decisiones del modelo, P(tipo) × P(severidad) × P(prioridad). El tipo sale con probabilidad 1,0 en los cuatro casos porque la evidencia es inequívoca; la severidad casi siempre 0,99 o 1,0; y la prioridad es donde el modelo realmente duda (0,82 en M-109: un 18 % dice que podría esperar). Resultado: M-109 81 %, M-112 93 %, M-104 89 %, M-106 95 %. Con datos de producción, más ruidosos, las tres bajarían y el operador vería dónde mirar con más cuidado.
