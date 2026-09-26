@@ -38,7 +38,7 @@ export default function Anomalies() {
     <AppShell title="Anomalías IA" priorityCount={q.data?.items.filter(a => a.priority).length}>
       <FilterBar right={q.data && (q.data.run_id ? `${q.data.total} anomalía${q.data.total === 1 ? '' : 's'} · análisis ${q.data.run_finished_at ? relTime(q.data.run_finished_at) : ''}` : 'sin análisis ejecutado')}>
         <SegmentedControl label="Severidad" value={severity} onChange={setSeverity} options={[{ value: 'ALL', label: 'Todas' }, { value: 'HIGH', label: 'Alta' }, { value: 'MEDIUM', label: 'Media' }, { value: 'LOW', label: 'Baja' }]} />
-        <Select value={type} onValueChange={v => setType(v ?? 'ALL')}>
+        <Select value={type} onValueChange={v => setType(v ?? 'ALL')} items={{ ALL: 'Todos los tipos', ...Object.fromEntries(TYPE_ORDER.map(t => [t, TYPE[t].label])) }}>
           <SelectTrigger className="w-48" aria-label="Tipo de anomalía"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="ALL">Todos los tipos</SelectItem>
