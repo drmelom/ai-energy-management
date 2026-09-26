@@ -32,6 +32,9 @@ export function ProbBars({ meta, winner, severity }: { meta: AiMeta; winner: Ano
             </div>
           ))}
           {meta.priority_probability != null && <div className="text-muted-foreground mt-1">Prioridad: <span className="num text-foreground font-semibold">{Math.round(meta.priority_probability * 100)} %</span></div>}
+
+        </div>
+      </details>
           {meta.confidence_parts && (
             <div className="mt-3 rounded-md bg-muted/60 p-2.5 text-muted-foreground">
               <div className="font-semibold text-foreground mb-1">De dónde sale la confianza</div>
@@ -41,8 +44,6 @@ export function ProbBars({ meta, winner, severity }: { meta: AiMeta; winner: Ano
               <p className="mt-1">Cada factor es la certeza que el modelo reporta para esa respuesta: qué tan concentrada está su probabilidad en el tipo elegido, en la severidad elegida y en la decisión de prioridad. La confianza de la anomalía es el producto de las tres.</p>
             </div>
           )}
-        </div>
-      </details>
     </div>
   );
 }
