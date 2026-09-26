@@ -9,7 +9,7 @@ MVP end-to-end para gestionar medidores eléctricos y usar IA para **detectar, e
 | Backend | Python 3.12 · FastAPI · SQLAlchemy + SQLite · pandas · LangGraph |
 | IA | **Jev** (TypeSafe AI, modelo de decisión) para clasificar · LLM vía OpenRouter para redactar · fallbacks deterministas (reglas y plantillas) |
 | Frontend | Vite · React 19 · TypeScript · Tailwind CSS v4 · Recharts 3 · react-router |
-| Tests | pytest (36 tests, sin red, < 5 s) |
+| Tests | pytest (41 tests, sin red, < 5 s) · GitHub Actions · Docker |
 
 ## Arranque en 3 comandos
 
@@ -37,6 +37,22 @@ Abrir <http://localhost:5173> · login demo `admin` / `admin` · Swagger en <htt
 ```dotenv
 OPENROUTER_API_KEY=sk-or-...   # una sola clave: Jev (typesafe/jev-1.13) + LLM (modelos :free) salen de OpenRouter
 ```
+
+## Docker (todo con un comando)
+
+```bash
+docker compose up --build
+```
+
+UI en <http://localhost:8080> (nginx sirve el build y proxifica `/api` al backend) · API en <http://localhost:8000>. La base SQLite vive en el volumen `energy-state`; `docker compose down -v` la borra y la siguiente arrancada vuelve a sembrar los CSV. Las claves se leen de `backend/.env` si existe.
+
+## CI y despliegue
+
+- **GitHub Actions** (`.github/workflows/ci.yml`): en cada push y PR corre los tests del backend (incluido el de escalabilidad con 60 medidores), compila el frontend y construye ambas imágenes; en `main` publica la del API en `ghcr.io/<owner>/ai-energy-management/api`.
+- **Frontend en Vercel (gratis)**: importar el repo en Vercel con *Root Directory* `frontend` (detecta Vite; `frontend/vercel.json` añade el rewrite de SPA) y definir `VITE_API_URL=https://<api>.onrender.com`.
+- **API en Render (gratis)**: *New → Blueprint* sobre el repo; `render.yaml` crea el servicio Docker desde `backend/`. Definir `OPENROUTER_API_KEY` en el panel y `CORS_ORIGINS` con la URL de Vercel (cualquier `*.vercel.app` ya está permitido por regex). El plan gratuito duerme tras 15 min sin tráfico: abrir `/health` un minuto antes de la demo.
+
+¿Por qué el API no va en Vercel? El análisis corre como tarea en segundo plano durante 15–35 s y persiste en SQLite; en un entorno serverless la función terminaría y el disco no persiste. Un contenedor siempre encendido es el encaje correcto.
 
 ## Flujo de la demo (5–10 min)
 

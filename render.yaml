@@ -1,0 +1,20 @@
+# Render Blueprint: free web service for the API (Docker). Connect the repo in Render → New → Blueprint.
+services:
+  - type: web
+    name: ai-energy-api
+    runtime: docker
+    plan: free
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: OPENROUTER_API_KEY
+        sync: false            # set it in the Render dashboard (secret)
+      - key: CORS_ORIGINS
+        value: https://ai-energy-management.vercel.app   # replace with the real Vercel URL (any *.vercel.app is also allowed by regex)
+      - key: LLM_MODELS
+        value: nvidia/nemotron-3-super-120b-a12b:free,qwen/qwen3.8-27b:free,dots-studio/dots-3-note-preview:free
+      - key: LLM_TIMEOUT_SECONDS
+        value: "30"
+      - key: LOG_LEVEL
+        value: INFO

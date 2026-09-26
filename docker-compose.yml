@@ -1,0 +1,22 @@
+services:
+  backend:
+    build: ./backend
+    env_file:
+      - path: ./backend/.env
+        required: false          # without keys the API runs in rules/template mode
+    environment:
+      CORS_ORIGINS: http://localhost:5173,http://localhost:8080
+    ports:
+      - "8000:8000"
+    volumes:
+      - energy-state:/app/state  # SQLite survives restarts; delete the volume to reset the demo
+
+  frontend:
+    build: ./frontend
+    depends_on:
+      - backend
+    ports:
+      - "8080:80"
+
+volumes:
+  energy-state:
