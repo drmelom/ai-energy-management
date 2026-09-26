@@ -106,7 +106,9 @@ def detect_data_quality(dfe: pd.DataFrame, th: Thresholds) -> tuple[int, dict[st
     signals = {"voltage_out_of_band": bool(s1), "voltage_jumps": bool(s2), "residual_erratic": bool(s3), "low_power_factor": bool(s4)}
     score = int(s1) + int(s2) + int(s3)
 
-    flagged = out_band | jumps | res_pos | res_neg
+    # window = hours with the strong signals (V out of band / V jumps) when those fired; the residual alone
+    # flags sporadic hours in healthy periods (bias +6 %, sigma ~5 %) and would drag the window backwards.
+    flagged = (out_band | jumps) if (s1 or s2) else (res_pos | res_neg)
     if not flagged.any():
         return score, signals, []
     w0 = dfe.loc[flagged, "timestamp"].iloc[0].to_pydatetime()

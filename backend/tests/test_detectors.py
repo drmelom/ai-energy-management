@@ -119,6 +119,7 @@ def test_m106_outage_matches_declared_duration(real_candidates):
 def test_m112_data_quality_without_consumption_anomaly(real_candidates):
     c = real_candidates["M-112"]
     assert c.segment is None and c.dq_score == 3
+    assert min(e.window_from for e in c.evidence) == pd.Timestamp("2026-09-13 00:00").to_pydatetime(), "DQ window starts at the onset, not at a sporadic residual hour"
     kinds = {e.kind for e in c.evidence}
     assert {"VOLTAGE_OUT_OF_BAND", "VOLTAGE_JUMPS", "POWER_RESIDUAL_ERRATIC", "LOW_POWER_FACTOR", "EVENT_CORROBORATES_DQ"} <= kinds
     assert abs(c.metrics["variation_pct"]) < 2
