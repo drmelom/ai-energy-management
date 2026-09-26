@@ -15,11 +15,12 @@ function Glyph({ status, degraded }: { status: StageProgress['status']; degraded
   return <span className={`${base} border-2 border-axis`} />;
 }
 
-function LiveSeconds({ since }: { since: string }) {
-  const [now, setNow] = useState(Date.now());
+function LiveSeconds() {
+  // Counts from the moment the stage was first seen running on this client (server clock is UTC; we avoid mixing clocks).
+  const [start] = useState(() => Date.now());
+  const [now, setNow] = useState(start);
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 200); return () => clearInterval(t); }, []);
-  const start = parseNaive(since) - new Date().getTimezoneOffset() * 60_000 * 0; // stage timestamps are server-local; only used as a running counter
-  return <span className="num text-ink-3 text-xs">{fmtDur(Math.max(0, (now - start) / 1000) % 100000)}</span>;
+  return <span className="num text-ink-3 text-xs">{fmtDur((now - start) / 1000)}</span>;
 }
 
 export function AnalysisStepper({ run, degraded }: { run: AnalysisRun; degraded?: boolean }) {
@@ -34,7 +35,7 @@ export function AnalysisStepper({ run, degraded }: { run: AnalysisRun; degraded?
             <div className="flex items-center justify-between gap-3">
               <span className={`${s.status === 'pending' ? 'text-ink-3' : s.status === 'failed' ? 'text-critical-ink' : 'text-ink'} ${s.status === 'running' ? 'font-semibold' : ''}`}>{s.label}</span>
               {s.status === 'done' && dur(s) != null && <span className="num text-ink-3 text-xs">{fmtDur(dur(s)!)}</span>}
-              {s.status === 'running' && s.started_at && <LiveSeconds since={s.started_at} />}
+              {s.status === 'running' && <LiveSeconds key={s.key} />}
             </div>
             {s.status === 'running' && <div className="skeleton h-3 w-3/5 mt-1.5" />}
             {s.status === 'done' && s.detail && <p className="text-xs text-ink-2 mt-0.5">{s.detail}</p>}

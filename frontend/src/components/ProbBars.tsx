@@ -14,9 +14,9 @@ export function ProbBars({ meta, winner, severity }: { meta: AiMeta; winner: Ano
       {TYPE_ORDER.map(t => {
         const p = (probs[t] ?? 0) * 100;
         return (
-          <div key={t} className="grid items-center gap-2" style={{ gridTemplateColumns: '120px 1fr 56px' }}>
+          <div key={t} className="grid items-center gap-2" style={{ gridTemplateColumns: '104px minmax(40px, 1fr) 52px' }}>
             <TypeBadge type={t} compact short />
-            <HBar value={p} width={140} fill={`var(--${TYPE[t].tone})`} />
+            <HBar value={p} width="100%" fill={`var(--${TYPE[t].tone})`} />
             <span className="num text-xs text-right text-ink">{Math.round(p)} %{t === winner && <Icon name="check" size={12} className="inline ml-1 text-ink" />}</span>
           </div>
         );
@@ -25,9 +25,9 @@ export function ProbBars({ meta, winner, severity }: { meta: AiMeta; winner: Ano
         <summary className="cursor-pointer text-ink-2">Severidad y prioridad</summary>
         <div className="flex flex-col gap-1.5 mt-2">
           {(['HIGH', 'MEDIUM', 'LOW'] as const).map(s => (
-            <div key={s} className="grid items-center gap-2" style={{ gridTemplateColumns: '120px 1fr 56px' }}>
+            <div key={s} className="grid items-center gap-2" style={{ gridTemplateColumns: '104px minmax(40px, 1fr) 52px' }}>
               <SeverityBadge severity={s} compact />
-              <HBar value={(meta.severity_probabilities?.[s] ?? 0) * 100} width={140} fill={`var(--${SEVERITY[s].tone})`} />
+              <HBar value={(meta.severity_probabilities?.[s] ?? 0) * 100} width="100%" fill={`var(--${SEVERITY[s].tone})`} />
               <span className="num text-right">{Math.round((meta.severity_probabilities?.[s] ?? 0) * 100)} %{s === severity && <Icon name="check" size={12} className="inline ml-1" />}</span>
             </div>
           ))}

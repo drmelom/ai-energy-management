@@ -24,7 +24,7 @@ export default function Anomalies() {
     { key: 'type', header: 'Tipo', render: r => <TypeBadge type={r.type} /> },
     { key: 'severity', header: 'Severidad', render: r => <SeverityBadge severity={r.severity} priority={r.priority} /> },
     { key: 'confidence', header: 'Confianza', render: r => <ConfidenceBar confidence={r.confidence} /> },
-    { key: 'reason', header: 'Hallazgo', render: r => <span className="clamp-1 text-ink-2 max-w-[420px]" title={r.reason}>{r.reason}</span> },
+    { key: 'reason', header: 'Hallazgo', render: r => <span className="clamp-1 text-ink-2 min-w-[240px] max-w-[480px] block" title={r.reason}>{r.reason}</span> },
     { key: 'status', header: 'Estado', render: r => <AnomalyStatusChip status={r.status} /> },
     { key: 'action', header: 'Acción', align: 'right', render: r => <Link to={`/anomalies/${r.id}`} className="btn btn-secondary h-8 px-2.5 text-xs no-underline">Investigar →</Link> },
   ];

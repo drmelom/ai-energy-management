@@ -2,8 +2,8 @@
 export const parseNaive = (s: string): number => {
   const [d, t = '00:00:00'] = s.split('T');
   const [y, m, dd] = d.split('-').map(Number);
-  const [h = 0, mi = 0] = t.split(':').map(Number);
-  return new Date(y, m - 1, dd, h, mi).getTime();
+  const [h = 0, mi = 0, sec = 0] = t.split(':').map(Number);
+  return new Date(y, m - 1, dd, h, mi, Math.floor(sec), Math.round((sec % 1) * 1000)).getTime();
 };
 export const hourOf = (s: string) => Number(s.slice(11, 13));
 export const HOUR = 3_600_000;
@@ -26,7 +26,7 @@ export const fmtDay = (ms: number) => { const d = new Date(ms); return `${p2(d.g
 export const fmtDayHour = (ms: number) => { const d = new Date(ms); return `${fmtDay(ms)} ${p2(d.getHours())}:${p2(d.getMinutes())}`; };
 export const fmtTs = (ms: number) => `${WD[new Date(ms).getDay()]} ${fmtDayHour(ms)}`;
 export const fmtIso = (iso: string) => fmtDayHour(parseNaive(iso));
-export const fmtDur = (s: number) => `${s.toLocaleString('es-CO', { maximumFractionDigits: 1 })} s`;
+export const fmtDur = (s: number) => (s < 1 ? `${Math.round(s * 1000)} ms` : `${s.toLocaleString('es-CO', { maximumFractionDigits: 1 })} s`);
 
 export const relTime = (iso: string) => {
   // server timestamps are UTC naive; compare against now in UTC

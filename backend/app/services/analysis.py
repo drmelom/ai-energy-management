@@ -115,7 +115,7 @@ class AnalysisRunner:
         self._persist_results(run_id, final_state)
 
     def _stage(self, run_id: str, key: str, status: str, detail: str | None = None) -> None:
-        now = datetime.utcnow().isoformat(timespec="seconds")
+        now = datetime.utcnow().isoformat(timespec="milliseconds")
         with self.sm() as db:
             run = db.get(AnalysisRun, run_id)
             stages = [dict(s) for s in run.stages]

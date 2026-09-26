@@ -1,12 +1,12 @@
 /** Horizontal CSS bar, 0–100, always from zero. Base of ConfidenceBar and ProbBars. */
-export function HBar({ value, fill = 'var(--ink-2)', width = 64, height = 6, label }: { value: number; fill?: string; width?: number; height?: number; label?: string }) {
+export function HBar({ value, fill = 'var(--ink-2)', width = 64, height = 6, label }: { value: number; fill?: string; width?: number | string; height?: number; label?: string }) {
   const v = Math.max(0, Math.min(100, value));
   return (
-    <span className="inline-flex items-center gap-2">
-      <span className="inline-block rounded-full overflow-hidden" style={{ width, height, background: 'var(--grid)' }} role="img" aria-label={label ?? `${Math.round(v)} %`}>
+    <span className="inline-flex items-center gap-2 min-w-0" style={typeof width === 'string' ? { width: '100%' } : undefined}>
+      <span className="inline-block rounded-full overflow-hidden shrink" style={{ width, height, background: 'var(--grid)', flex: typeof width === 'string' ? 1 : undefined }} role="img" aria-label={label ?? `${Math.round(v)} %`}>
         <span className="block h-full rounded-full" style={{ width: `${v}%`, background: fill }} />
       </span>
-      {label && <span className="num text-ink">{label}</span>}
+      {label && <span className="num text-ink whitespace-nowrap">{label}</span>}
     </span>
   );
 }
