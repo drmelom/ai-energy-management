@@ -12,8 +12,11 @@ export function HBar({ value, fill = 'var(--muted-foreground)', width = 64, heig
   );
 }
 
+// Same scale the test statement uses in its anomalies table ("Alta", "Media", "Baja").
+export const confidenceLabel = (c: number) => (c >= 0.8 ? 'Alta' : c >= 0.6 ? 'Media' : 'Baja');
+
 export const ConfidenceBar = ({ confidence, width = 64 }: { confidence: number; width?: number }) => (
-  <HBar value={confidence * 100} width={width} label={`${Math.round(confidence * 100)} %`} />
+  <HBar value={confidence * 100} width={width} label={`${confidenceLabel(confidence)} · ${Math.round(confidence * 100)} %`} />
 );
 
 /** Bar centred on zero: length ∝ |value| / max, colour = tone of the row (severity) or neutral mark. */
