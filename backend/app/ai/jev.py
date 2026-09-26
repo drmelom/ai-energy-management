@@ -42,17 +42,19 @@ QUESTIONS = {
         ],
     ),
     "priority": Noul(instructions="Does this case require priority investigation by a field technician?"),
-    # 4th question: Jev's own confidence in the whole assessment, asked directly (not derived from the other answers).
+    # 4th question: Jev's own confidence, asked directly and independently of the other answers.
+    # It measures how clearly the findings support the classification, NOT whether the root cause is known
+    # (a real anomaly is classified by exclusion; asking "is the cause known?" would punish exactly that case).
     "confidence": Score(
-        instructions="How conclusive is the evidence for classifying this meter's situation, its severity and whether it needs priority investigation?",
+        instructions="Given the findings, how clearly do they support the chosen classification (real anomaly / explainable / false positive / data quality) and its severity?",
         criteria=[
-            "Inconclusive: key information is missing or contradictory; a human must review.",
-            "Partially conclusive: the classification is reasonable but there are gaps or a plausible alternative.",
-            "Conclusive: the evidence clearly supports one classification, severity and priority decision.",
+            "Weakly: the findings could fit two or more classifications equally.",
+            "Moderately: one classification fits best but another remains plausible.",
+            "Strongly: the findings point unambiguously to one classification and severity.",
         ],
     ),
 }
-CONFIDENCE_LEVELS = ["INCONCLUSIVE", "PARTIAL", "CONCLUSIVE"]
+CONFIDENCE_LEVELS = ["WEAK", "MODERATE", "STRONG"]
 
 
 def to_jev_state(c: Candidate) -> str:

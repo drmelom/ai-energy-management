@@ -34,10 +34,10 @@ export function ProbBars({ meta, winner, severity }: { meta: AiMeta; winner: Ano
           {meta.priority_probability != null && <div className="text-muted-foreground mt-1">Prioridad: <span className="num text-foreground font-semibold">{Math.round(meta.priority_probability * 100)} %</span></div>}
           {meta.confidence_probabilities && (
             <div className="mt-2 text-muted-foreground">
-              <div className="mb-1">Confianza: respuesta directa del modelo a "¿qué tan concluyente es la evidencia?"</div>
-              {(['CONCLUSIVE', 'PARTIAL', 'INCONCLUSIVE'] as const).map(k => (
+              <div className="mb-1">Confianza: respuesta directa del modelo a "¿con qué claridad respaldan los hallazgos esta clasificación?"</div>
+              {(['STRONG', 'MODERATE', 'WEAK'] as const).map(k => (
                 <div key={k} className="grid items-center gap-2" style={{ gridTemplateColumns: '104px minmax(40px, 1fr) 52px' }}>
-                  <span className="text-[11px]">{k === 'CONCLUSIVE' ? 'Concluyente' : k === 'PARTIAL' ? 'Parcial' : 'No concluyente'}</span>
+                  <span className="text-[11px]">{k === 'STRONG' ? 'Fuerte' : k === 'MODERATE' ? 'Moderada' : 'Débil'}</span>
                   <HBar value={(meta.confidence_probabilities?.[k] ?? 0) * 100} width="100%" fill="var(--muted-foreground)" />
                   <span className="num text-right">{Math.round((meta.confidence_probabilities?.[k] ?? 0) * 100)} %</span>
                 </div>

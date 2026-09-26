@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Cpu, LayoutDashboard, List, LogOut, Moon, Monitor, Play, Siren, Sun, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarInset,
@@ -107,7 +107,7 @@ export function AppShell({ title, crumbs, children, priorityCount }: { title: st
             <DropdownMenu>
               <DropdownMenuTrigger render={<Button variant="outline" size="icon" className="rounded-full text-xs font-semibold" aria-label="Operador demo" />}>OD</DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuLabel>Operador demo</DropdownMenuLabel>
+                <DropdownMenuGroup><DropdownMenuLabel>Operador demo</DropdownMenuLabel></DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuRadioGroup value={theme} onValueChange={v => setTheme(v as Theme)}>
                   <DropdownMenuRadioItem value="light"><Sun className="mr-2 size-4" />Claro</DropdownMenuRadioItem>
