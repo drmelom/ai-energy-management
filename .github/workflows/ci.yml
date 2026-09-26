@@ -20,7 +20,7 @@ jobs:
         with: { version: "0.7.6", enable-cache: true }
       - run: uv python install 3.12
       - run: uv sync --frozen
-      - name: pytest (offline: rules/template providers, includes 60-meter scalability test)
+      - name: "pytest (offline, rules/template providers, includes the 60-meter scalability test)"
         run: uv run pytest -q
 
   frontend:
