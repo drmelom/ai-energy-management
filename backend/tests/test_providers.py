@@ -67,6 +67,9 @@ def test_number_validator():
     assert numbers_are_grounded("Consumo 110.4% sobre 2227 kWh/día.", ev)  # en-style spelling of the same figures
     assert not numbers_are_grounded("Consumo 103,7 % por encima del baseline.", ev)  # PDF figure, not in evidence
     assert not numbers_are_grounded("Baseline de 1.070 kWh.", ev)
+    # a comma-decimal PF in the evidence must not legitimise the bare integer (0,94 -> 94)
+    assert not numbers_are_grounded("El PF cayó un 94 %.", ev)
+    assert not numbers_are_grounded("Durante 73 horas.", ev)
 
 
 class _Boom:

@@ -48,9 +48,9 @@ def list_meters(db: Session, status: str | None, search: str | None, sort: str, 
     if sort == "severity":
         items.sort(key=lambda i: (sev_key(i), -abs(i.variation_pct)), reverse=(order == "asc"))
     elif sort == "consumption":
-        items.sort(key=lambda i: i.total_consumption_kwh, reverse=(order != "asc"))
+        items.sort(key=lambda i: i.total_consumption_kwh, reverse=(order == "desc"))
     elif sort == "variation":
-        items.sort(key=lambda i: abs(i.variation_pct), reverse=(order != "asc"))
+        items.sort(key=lambda i: abs(i.variation_pct), reverse=(order == "desc"))
     else:
         items.sort(key=lambda i: i.meter_id, reverse=(order == "desc"))
     return MeterList(items=items, total=len(items), analysis_run_id=run_id)

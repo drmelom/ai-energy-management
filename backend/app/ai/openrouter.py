@@ -42,26 +42,32 @@ class ExplanationOut(BaseModel):
 _NUM = re.compile(r"[-+±]?\d[\d.,]*")
 
 
-def _parse_numbers(text: str) -> set[float]:
-    """Every plausible reading of each numeric token (es/en thousands and decimal separators)."""
-    out: set[float] = set()
+def _parse_numbers(text: str, es_only: bool) -> list[set[float]]:
+    """One set of readings per numeric token. Evidence is always formatted es-CO (1.234,5) so it gets a single
+    reading; the LLM may write es or en style, so its tokens get both readings and must match on at least one."""
+    out: list[set[float]] = []
     for tok in _NUM.findall(text):
         tok = tok.strip("+-±").rstrip(".,")
         if not tok:
             continue
-        variants = {tok.replace(".", "").replace(",", "."), tok.replace(",", ""), tok.replace(".", ",").replace(",", ".", 1)}
+        variants = [tok.replace(".", "").replace(",", ".")]  # es-CO reading
+        if not es_only:
+            variants.append(tok.replace(",", ""))          # en reading
+        readings: set[float] = set()
         for v in variants:
             try:
-                out.add(round(float(v), 2))
+                readings.add(round(float(v), 2))
             except ValueError:
                 pass
+        if readings:
+            out.append(readings)
     return out
 
 
 def numbers_are_grounded(text: str, evidence_text: str, tol: float = 0.05) -> bool:
-    allowed = _parse_numbers(evidence_text) | {float(h) for h in range(0, 25)}  # small hour counts are fine
-    for n in _parse_numbers(text):
-        if not any(abs(n - a) <= tol or (a and abs(n / a - 1) <= 0.005) for a in allowed):
+    allowed = {n for s in _parse_numbers(evidence_text, es_only=True) for n in s} | {float(h) for h in range(0, 25)}
+    for readings in _parse_numbers(text, es_only=False):
+        if not any(abs(n - a) <= tol or (a and abs(n / a - 1) <= 0.005) for n in readings for a in allowed):
             return False
     return True
 

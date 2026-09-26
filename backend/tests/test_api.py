@@ -111,6 +111,8 @@ def test_meter_status_and_filters_after_run(client, completed_run):
     assert client.get("/meters", params={"search": "109"}).json()["total"] == 1
     top = client.get("/meters", params={"sort": "consumption", "order": "desc"}).json()["items"][0]
     assert top["meter_id"] == "M-104"
+    # documented default: ascending unless order=desc (severity is the only desc-by-default sort)
+    assert client.get("/meters", params={"sort": "consumption"}).json()["items"][0]["meter_id"] == "M-107"
 
 
 def test_meter_detail(client, completed_run):
