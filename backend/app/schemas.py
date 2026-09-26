@@ -39,6 +39,7 @@ class AiMeta(BaseModel):
     decision_probabilities: dict[str, float] | None = None
     severity_probabilities: dict[str, float] | None = None
     priority_probability: float | None = None
+    confidence_probabilities: dict[str, float] | None = None
     explanation_provider: str
     fallback_notes: list[str] = Field(default_factory=list)
     latency_ms: dict[str, int] = Field(default_factory=dict)

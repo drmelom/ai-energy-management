@@ -661,7 +661,7 @@ La última línea "negativa" (qué NO pasa) se emite siempre: a un clasificador 
 | Score | *How severe is the operational impact of this situation?* | escala ordenada `LOW < MEDIUM < HIGH` |
 | Noul | *Does this case require priority investigation by a field technician?* | sí/no |
 
-**Mapeo:** `type = argmax(Choice)`, `severity = round(Score)`, `priority = P(Noul) ≥ 0,5`, `confidence = P(type) · P(severity) · P(respuesta de prioridad)` (probabilidad conjunta de las tres decisiones; con el dataset: M-109 0,81 · M-112 0,93 · M-104 0,89 · M-106 0,95). Las tres distribuciones se guardan en `AiMeta` para mostrarlas en Investigation.
+**Mapeo:** `type = argmax(Choice)`, `severity = round(Score)`, `priority = P(Noul) ≥ 0,5`, `confidence = Score(¿qué tan concluyente es la evidencia?) / 2` — cuarta pregunta independiente (con el dataset: M-104 0,91 · M-106 0,98 · M-112 0,90 · M-109 0,61: su evento UNKNOWN deja un hueco que el modelo señala como parcialmente concluyente). Las tres distribuciones se guardan en `AiMeta` para mostrarlas en Investigation.
 
 **Guardrails (post-Jev, en `services`/nodo 6, no en el adaptador):** dos reglas duras que la evidencia hace incuestionables; si Jev las viola, la decisión de ese candidato pasa a `rules` y se anota `guardrail:G1|G2`.
 

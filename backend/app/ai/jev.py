@@ -42,7 +42,17 @@ QUESTIONS = {
         ],
     ),
     "priority": Noul(instructions="Does this case require priority investigation by a field technician?"),
+    # 4th question: Jev's own confidence in the whole assessment, asked directly (not derived from the other answers).
+    "confidence": Score(
+        instructions="How conclusive is the evidence for classifying this meter's situation, its severity and whether it needs priority investigation?",
+        criteria=[
+            "Inconclusive: key information is missing or contradictory; a human must review.",
+            "Partially conclusive: the classification is reasonable but there are gaps or a plausible alternative.",
+            "Conclusive: the evidence clearly supports one classification, severity and priority decision.",
+        ],
+    ),
 }
+CONFIDENCE_LEVELS = ["INCONCLUSIVE", "PARTIAL", "CONCLUSIVE"]
 
 
 def to_jev_state(c: Candidate) -> str:
@@ -90,19 +100,17 @@ class JevDecisionProvider:
         t = r.answers["type"]
         s = r.answers["severity"]
         p = r.answers["priority"]
+        cf = r.answers["confidence"]
         sev_idx = min(2, max(0, round(s.score)))
         severity = SEVERITY_LEVELS[sev_idx]
         priority = p.noul >= 0.5
-        # Confidence = joint probability of the three answers Jev gave:
-        # P(chosen type) x P(chosen severity level) x P(the priority answer it committed to).
-        p_type = float(t.probabilities.get(t.choice, t.confidence))
-        p_sev = float(s.probabilities.get(sev_idx, s.probabilities.get(str(sev_idx), s.confidence)))
-        p_prio = float(p.noul if priority else 1 - p.noul)
+        # Confidence = Jev's direct answer to the 4th question: position on the 0..2 conclusiveness scale, mapped to 0..1.
         return Decision(
             type=t.choice,
             severity=severity,
             priority=priority,
-            confidence=round(p_type * p_sev * p_prio, 2),
+            confidence=round(min(1.0, max(0.0, float(cf.score) / 2)), 2),
+            confidence_probabilities={CONFIDENCE_LEVELS[int(k)]: round(v, 3) for k, v in cf.probabilities.items() if int(k) < 3},
             type_probabilities={k: round(v, 3) for k, v in t.probabilities.items()},
             severity_probabilities={SEVERITY_LEVELS[int(k)]: round(v, 3) for k, v in s.probabilities.items() if int(k) < 3},
             priority_probability=round(p.noul, 3),
