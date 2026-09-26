@@ -15,13 +15,13 @@ const Row = ({ label, value, fill, winner }: { label: ReactNode; value: number; 
 );
 
 /** Breakdown line reused by the card and by the confidence tooltips. */
-export function ConfidenceFormula({ parts }: { parts: Record<string, number> }) {
+export function ConfidenceFormula({ parts, confidence }: { parts: Record<string, number>; confidence: number }) {
   return (
-    <span className="num">{pct(parts.type * parts.severity * parts.priority)} % = tipo {pct(parts.type)} % × severidad {pct(parts.severity)} % × prioridad {pct(parts.priority)} %</span>
+    <span className="num">{pct(confidence)} % = tipo {pct(parts.type)} % × severidad {pct(parts.severity)} % × prioridad {pct(parts.priority)} %</span>
   );
 }
 
-export function ProbBars({ meta, winner, severity, priority }: { meta: AiMeta; winner: AnomalyType; severity: string; priority: boolean }) {
+export function ProbBars({ meta, winner, severity, priority, confidence }: { meta: AiMeta; winner: AnomalyType; severity: string; priority: boolean; confidence: number }) {
   if (!meta.decision_probabilities) {
     return <p className="text-xs text-muted-foreground">Clasificado con reglas deterministas — sin distribución de probabilidad.</p>;
   }
@@ -51,7 +51,7 @@ export function ProbBars({ meta, winner, severity, priority }: { meta: AiMeta; w
       {meta.confidence_parts && (
         <section className="rounded-md bg-muted/60 p-2.5 text-muted-foreground">
           <p className="font-semibold text-foreground mb-1">De dónde sale la confianza</p>
-          <p className="text-foreground"><ConfidenceFormula parts={meta.confidence_parts} /></p>
+          <p className="text-foreground"><ConfidenceFormula parts={meta.confidence_parts} confidence={confidence} /></p>
           <p className="mt-1">Cada factor es la certeza que el modelo reporta para esa respuesta: qué tan concentrada está su probabilidad en la opción elegida. La confianza de la anomalía es el producto de las tres.</p>
         </section>
       )}

@@ -26,7 +26,7 @@ export function ConfidenceBar({ confidence, width = 64, parts }: { confidence: n
       <TooltipTrigger render={<span className="cursor-help underline decoration-dotted decoration-muted-foreground/60 underline-offset-4" />}>{bar}</TooltipTrigger>
       <TooltipContent className="max-w-xs text-xs">
         <p className="font-semibold mb-0.5">De dónde sale la confianza</p>
-        <ConfidenceFormula parts={parts} />
+        <ConfidenceFormula parts={parts} confidence={confidence} />
         <p className="mt-1 opacity-80">Certeza del modelo en el tipo × en la severidad × en la decisión de prioridad.</p>
       </TooltipContent>
     </Tooltip>

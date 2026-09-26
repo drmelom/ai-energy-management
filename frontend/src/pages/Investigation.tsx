@@ -84,7 +84,7 @@ export default function Investigation() {
             </div>
             <aside className="flex flex-col gap-4 min-w-0">
               <Section title="Decisión de la IA">
-                <ProbBars meta={d.ai_meta} winner={d.type} severity={d.severity} priority={d.priority} />
+                <ProbBars meta={d.ai_meta} winner={d.type} severity={d.severity} priority={d.priority} confidence={d.confidence} />
                 <p className="text-xs text-muted-foreground mt-3">Tiempo de análisis: <span className="num text-foreground">{d.ai_meta.latency_ms.decision + d.ai_meta.latency_ms.explanation} ms</span></p>
                 {d.ai_meta.fallback_notes.length > 0 && <p className="text-xs text-warning-ink flex items-center gap-1 mt-1"><TriangleAlert className="size-3" />Se usó el respaldo determinista en este caso.</p>}
               </Section>
