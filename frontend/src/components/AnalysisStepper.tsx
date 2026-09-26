@@ -70,8 +70,8 @@ export function RunHeadline({ run, firstMeter }: { run: AnalysisRun; firstMeter?
           </div>
         </div>
         <div className="ml-auto flex gap-2">
-          <Button render={<Link to="/anomalies" />}>Ver anomalías →</Button>
-          {firstMeter && <Button variant="outline" render={<Link to={`/meters/${firstMeter}`} />}>Ver {firstMeter}</Button>}
+          <Button nativeButton={false} render={<Link to="/anomalies" />}>Ver anomalías →</Button>
+          {firstMeter && <Button variant="outline" nativeButton={false} render={<Link to={`/meters/${firstMeter}`} />}>Ver {firstMeter}</Button>}
         </div>
       </CardContent>
     </Card>

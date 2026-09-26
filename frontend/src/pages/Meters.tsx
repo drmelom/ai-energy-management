@@ -47,7 +47,7 @@ export default function Meters() {
       return <span className="flex items-center gap-3"><VariationBar value={r.variation_pct} max={max} color={sev && sev.tone !== 'neutral' ? `var(--${sev.tone})` : 'var(--mark-neutral)'} /><span className={`num ${r.anomaly ? 'font-semibold' : 'text-muted-foreground'}`}>{fmtPct(r.variation_pct)}</span></span>;
     } },
     { key: 'severity', header: 'Anomalía IA', sortable: true, render: r => r.anomaly ? <span className="flex gap-1.5"><TypeBadge type={r.anomaly.type} /><SeverityBadge severity={r.anomaly.severity} priority={r.anomaly.priority} /></span> : <span className="text-muted-foreground/60">—</span> },
-    { key: 'link', header: '', align: 'right', render: r => <Button variant="ghost" size="sm" render={<Link to={`/meters/${r.meter_id}`} />}>Ver detalle →</Button> },
+    { key: 'link', header: '', align: 'right', render: r => <Button variant="ghost" size="sm" nativeButton={false} render={<Link to={`/meters/${r.meter_id}`} />}>Ver detalle →</Button> },
   ];
 
   return (

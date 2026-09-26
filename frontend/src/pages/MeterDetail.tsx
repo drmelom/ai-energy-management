@@ -46,7 +46,7 @@ export default function MeterDetail() {
       {meter.error && <p className="text-critical-ink">{meter.error.message}</p>}
       <div className="flex items-center gap-2 flex-wrap">
         {m && <><span className="text-muted-foreground">{m.location}</span><StatusBadge status={m.status} />
-          {m.anomalies.map(x => <span key={x.id} className="flex items-center gap-1.5"><TypeBadge type={x.type} /><SeverityBadge severity={x.severity} priority={x.priority} /><Button variant="link" size="sm" className="px-1" render={<Link to={`/anomalies/${x.id}`} />}>Investigar →</Button></span>)}
+          {m.anomalies.map(x => <span key={x.id} className="flex items-center gap-1.5"><TypeBadge type={x.type} /><SeverityBadge severity={x.severity} priority={x.priority} /><Button variant="link" size="sm" className="px-1" nativeButton={false} render={<Link to={`/anomalies/${x.id}`} />}>Investigar →</Button></span>)}
           {m.anomalies.length === 0 && <span className="text-xs text-muted-foreground">Sin anomalías en el último análisis</span>}</>}
       </div>
       <section className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>

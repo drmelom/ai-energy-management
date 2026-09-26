@@ -31,7 +31,7 @@ export default function Anomalies() {
     { key: 'confidence', header: 'Confianza', render: r => <ConfidenceBar confidence={r.confidence} /> },
     { key: 'reason', header: 'Hallazgo', render: r => <span className="clamp-1 text-muted-foreground min-w-[240px] max-w-[520px] block" title={r.reason}>{r.reason}</span> },
     { key: 'status', header: 'Estado', render: r => <AnomalyStatusChip status={r.status} /> },
-    { key: 'action', header: 'Acción', align: 'right', render: r => <Button variant="outline" size="sm" render={<Link to={`/anomalies/${r.id}`} />}>Investigar →</Button> },
+    { key: 'action', header: 'Acción', align: 'right', render: r => <Button variant="outline" size="sm" nativeButton={false} render={<Link to={`/anomalies/${r.id}`} />}>Investigar →</Button> },
   ];
 
   return (
