@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Check, OctagonAlert, X } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -9,12 +9,20 @@ import { cn } from '@/lib/utils';
 import type { AnalysisRun, StageProgress } from '../api/types';
 import { fmtDur, parseNaive } from '../lib/fmt';
 import { SeverityBadge } from './Badge';
+import { gsap, prefersReducedMotion, useGSAP, useRiseIn } from '../lib/motion';
 
 const dur = (s: StageProgress) => (s.started_at && s.finished_at ? (parseNaive(s.finished_at) - parseNaive(s.started_at)) / 1000 : null);
 
 function Glyph({ status, degraded }: { status: StageProgress['status']; degraded?: boolean }) {
   const base = 'size-6 rounded-full grid place-items-center shrink-0 transition-colors';
-  if (status === 'done') return <span className={cn(base, 'bg-ok text-white relative')}><Check className="size-3.5" />{degraded && <span aria-hidden className="absolute -right-0.5 -bottom-0.5 size-2.5 rounded-full bg-warning ring-2 ring-card" />}</span>;
+  const doneRef = useRef<HTMLSpanElement>(null);
+  const seen = useRef(status === 'done');
+  useGSAP(() => {
+    if (status !== 'done' || seen.current || !doneRef.current) return;
+    seen.current = true;
+    if (!prefersReducedMotion()) gsap.fromTo(doneRef.current, { scale: 0.5 }, { scale: 1, duration: 0.45, ease: 'back.out(2.5)', clearProps: 'transform' });
+  }, { dependencies: [status] });
+  if (status === 'done') return <span ref={doneRef} className={cn(base, 'bg-ok text-white relative')}><Check className="size-3.5" />{degraded && <span aria-hidden className="absolute -right-0.5 -bottom-0.5 size-2.5 rounded-full bg-warning ring-2 ring-card" />}</span>;
   if (status === 'running') return <span className={cn(base, 'border-2 border-primary border-t-transparent animate-spin')} aria-label="en curso" />;
   if (status === 'failed') return <span className={cn(base, 'bg-critical text-white')}><X className="size-3.5" /></span>;
   return <span className={cn(base, 'border-2 border-border')} />;
@@ -57,12 +65,14 @@ export function AnalysisStepper({ run, degraded }: { run: AnalysisRun; degraded?
 
 export function RunHeadline({ run, firstMeter }: { run: AnalysisRun; firstMeter?: string }) {
   const s = run.summary;
+  const box = useRef<HTMLDivElement>(null);
+  useRiseIn(box, '[data-rise]', [run.id]);
   if (!s) return null;
   const [head, tail] = s.headline.split(', ');
   return (
-    <Card className="fade-in">
-      <CardContent className="flex items-center gap-6 flex-wrap">
-        <div className="min-w-0">
+    <Card>
+      <CardContent ref={box} className="flex items-center gap-6 flex-wrap">
+        <div className="min-w-0" data-rise>
           <p className="eyebrow mb-1">Resultado del análisis</p>
           <div className="display-lg">{head}{tail && <span className="text-muted-foreground"> · {tail}</span>}</div>
           <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground flex-wrap">
@@ -70,7 +80,7 @@ export function RunHeadline({ run, firstMeter }: { run: AnalysisRun; firstMeter?
             <span>· confianza media <span className="num text-foreground font-semibold">{Math.round(s.avg_confidence * 100)} %</span></span>
           </div>
         </div>
-        <div className="ml-auto flex gap-2">
+        <div className="ml-auto flex gap-2" data-rise>
           <Button nativeButton={false} render={<Link to="/anomalies" />}>Ver anomalías →</Button>
           {firstMeter && <Button variant="outline" nativeButton={false} render={<Link to={`/meters/${firstMeter}`} />}>Ver {firstMeter}</Button>}
         </div>

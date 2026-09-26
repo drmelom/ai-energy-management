@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +12,7 @@ import { ElectricalCharts, MeterChart, ReadingsTable } from '../components/Meter
 import { fmtDay, fmtDayHour, fmtKwh, fmtNum, fmtPF, fmtPct, HOUR, parseNaive } from '../lib/fmt';
 import { eventMarks, segmentBounds, toChartPoints } from '../lib/shape';
 import { useRun } from '../state/run';
+import { useRiseIn } from '../lib/motion';
 
 type Range = 'all' | 'week2' | 'window';
 const isoLocal = (ms: number) => { const d = new Date(ms); const p = (n: number) => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:00:00`; };
@@ -38,7 +39,8 @@ export default function MeterDetail() {
 
   const m = meter.data;
   const lastDay = daily.data?.points.at(-1);
-  const tone = m?.status === 'CRITICAL' ? 'text-critical-ink' : m?.status === 'WARNING' ? 'text-warning-ink' : '';
+  const kpis = useRef<HTMLElement>(null);
+  useRiseIn(kpis, ':scope > *', [!!lastDay]);
   const aria = a ? `Consumo horario de ${meterId}. ${a.reason}` : `Consumo horario de ${meterId} dentro de la banda normal en todo el periodo.`;
 
   return (
@@ -49,10 +51,10 @@ export default function MeterDetail() {
           {m.anomalies.map(x => <span key={x.id} className="flex items-center gap-1.5"><TypeBadge type={x.type} /><SeverityBadge severity={x.severity} priority={x.priority} /><Button variant="link" size="sm" className="px-1" nativeButton={false} render={<Link to={`/anomalies/${x.id}`} />}>Investigar →</Button></span>)}
           {m.anomalies.length === 0 && <span className="text-xs text-muted-foreground">Sin anomalías en el último análisis</span>}</>}
       </div>
-      <section className="grid gap-4 stagger" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
-        <KpiTile label="Consumo actual (último día)" value={lastDay ? fmtKwh(lastDay.consumption_kwh) : '—'} loading={!lastDay} sub={lastDay && fmtDay(parseNaive(lastDay.timestamp))} />
-        <KpiTile label="Baseline diario" value={lastDay?.baseline_kwh != null ? fmtKwh(lastDay.baseline_kwh) : '—'} loading={!lastDay} sub="mediana horaria · días 1–7" />
-        <KpiTile label="Variación" value={<span className={tone}>{lastDay?.deviation_pct != null ? fmtPct(lastDay.deviation_pct) : '—'}</span>} loading={!lastDay} sub="último día vs baseline diario" />
+      <section ref={kpis} className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+        <KpiTile label="Consumo actual (último día)" count={lastDay ? { to: lastDay.consumption_kwh, format: n => fmtKwh(n) } : undefined} value="—" loading={!lastDay} sub={lastDay && fmtDay(parseNaive(lastDay.timestamp))} />
+        <KpiTile label="Baseline diario" count={lastDay?.baseline_kwh != null ? { to: lastDay.baseline_kwh, format: n => fmtKwh(n) } : undefined} value="—" loading={!lastDay} sub="mediana horaria · días 1–7" />
+        <KpiTile label="Variación" tone={m?.status === 'CRITICAL' ? 'critical' : m?.status === 'WARNING' ? 'warning' : undefined} count={lastDay?.deviation_pct != null ? { to: lastDay.deviation_pct, format: n => fmtPct(n) } : undefined} value="—" loading={!lastDay} sub="último día vs baseline diario" />
         <KpiTile label="Eléctrico" value={m ? <span className="text-lg font-semibold">{fmtNum(m.stats.avg_voltage_v)} V · PF {fmtPF(m.stats.avg_power_factor)}</span> : '—'} loading={!m}
           sub={m && <>V {fmtNum(m.stats.min_voltage_v)}–{fmtNum(m.stats.max_voltage_v)} · PF mín {fmtPF(m.stats.min_power_factor)}</>} />
       </section>
