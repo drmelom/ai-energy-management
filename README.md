@@ -1,5 +1,7 @@
 # AI Energy Management Platform
 
+**Live**: API en <https://ai-energy-api-g2ln.onrender.com> (Swagger en [/docs](https://ai-energy-api-g2ln.onrender.com/docs)) · UI en Vercel (ver sección CI y despliegue).
+
 MVP end-to-end para gestionar medidores eléctricos y usar IA para **detectar, explicar, priorizar y recomendar** acciones sobre anomalías. Prueba técnica · desarrollador full stack mid.
 
 **Ciclo completo que demuestra:** datos → análisis → anomalía → explicación → priorización → acción.
@@ -49,7 +51,7 @@ UI en <http://localhost:8080> (nginx sirve el build y proxifica `/api` al backen
 ## CI y despliegue
 
 - **GitHub Actions** (`.github/workflows/ci.yml`): en cada push y PR corre los tests del backend (incluido el de escalabilidad con 60 medidores), compila el frontend y construye ambas imágenes; en `main` publica la del API en `ghcr.io/<owner>/ai-energy-management/api`.
-- **Frontend en Vercel (gratis)**: importar el repo en Vercel con *Root Directory* `frontend` (detecta Vite; `frontend/vercel.json` añade el rewrite de SPA) y definir `VITE_API_URL=https://<api>.onrender.com`.
+- **Frontend en Vercel (gratis)**: importar el repo en Vercel con *Root Directory* `frontend` (detecta Vite; `frontend/vercel.json` añade el rewrite de SPA) y definir `VITE_API_URL=https://ai-energy-api-g2ln.onrender.com`.
 - **API en Render (gratis)**: *New → Blueprint* sobre el repo; `render.yaml` crea el servicio Docker desde `backend/`. Definir `OPENROUTER_API_KEY` en el panel y `CORS_ORIGINS` con la URL de Vercel (cualquier `*.vercel.app` ya está permitido por regex). El plan gratuito duerme tras 15 min sin tráfico; para que el evaluador nunca encuentre la API apagada: (1) `.github/workflows/keepalive.yml` hace GET a `/health` cada 10 min en cuanto se define la variable de repositorio `API_URL`; (2) la UI muestra una pantalla "Encendiendo el servidor" con reintentos automáticos si aun así la API tarda en responder.
 
 ¿Por qué el API no va en Vercel? El análisis corre como tarea en segundo plano durante 15–35 s y persiste en SQLite; en un entorno serverless la función terminaría y el disco no persiste. Un contenedor siempre encendido es el encaje correcto.
