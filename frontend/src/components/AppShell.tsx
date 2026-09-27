@@ -42,6 +42,9 @@ export function RunButton({ size = 'default' }: { size?: 'default' | 'sm' }) {
 export function AppShell({ title, crumbs, children, priorityCount }: { title: string; crumbs?: { label: string; to?: string }[]; children: ReactNode; priorityCount?: number }) {
   const nav = useNavigate();
   const { pathname } = useLocation();
+  const { run } = useRun();
+  // Badge on every page: explicit prop (pages that know better) or the last completed run's priority count.
+  const badge = priorityCount ?? (run?.status === 'COMPLETED' ? run.summary?.priority_count : undefined);
   const [theme, setTheme] = useState<Theme>(readTheme);
   useEffect(() => {
     applyTheme(theme);
@@ -76,7 +79,7 @@ export function AppShell({ title, crumbs, children, priorityCount }: { title: st
                     <SidebarMenuButton isActive={n.to === '/' ? pathname === '/' : pathname.startsWith(n.to)} tooltip={n.label} render={<Link to={n.to} />}>
                       <n.icon /><span>{n.label}</span>
                     </SidebarMenuButton>
-                    {n.to === '/anomalies' && !!priorityCount && <SidebarMenuBadge className="bg-critical text-white rounded-full">{priorityCount}</SidebarMenuBadge>}
+                    {n.to === '/anomalies' && !!badge && <SidebarMenuBadge className="bg-critical text-white rounded-full">{badge}</SidebarMenuBadge>}
                   </SidebarMenuItem>
                 ))}
               </SidebarMenu>
