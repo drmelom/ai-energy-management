@@ -16,9 +16,9 @@ export function KpiTile({ label, value, count, sub, tone, loading }: {
     <Card className="min-w-0 gap-0 py-0 overflow-hidden">
       <CardContent className="px-4 pt-3 pb-4 rule-top border-t-foreground/80">
         <div className="eyebrow">{label}</div>
-        <div className="mt-2 min-h-9 flex items-center">
+        <div className="mt-2 h-9 flex items-center overflow-hidden">
           {loading ? <Skeleton className="h-8 w-28" /> :
-            <div className={cn('display fade-in break-words [font-size:clamp(22px,2.1vw,32px)] leading-[1.1]', tone === 'critical' && 'text-critical-ink', tone === 'warning' && 'text-warning-ink')}>
+            <div className={cn('display fade-in whitespace-nowrap overflow-hidden text-ellipsis [font-size:clamp(20px,1.8vw,28px)] leading-9', tone === 'critical' && 'text-critical-ink', tone === 'warning' && 'text-warning-ink')}>
               {count ? <CountUp to={count.to} format={count.format} /> : value}
             </div>}
         </div>

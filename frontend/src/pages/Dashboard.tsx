@@ -23,10 +23,10 @@ export default function Dashboard() {
   const period = d ? `${fmtDay(parseNaive(d.consumption.period_from))} – ${fmtDay(parseNaive(d.consumption.period_to))}` : '';
   return (
     <AppShell title="Dashboard" priorityCount={d?.anomalies.priority}>
-      <section ref={kpis} className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }} aria-label="Indicadores">
+      <section ref={kpis} className="grid gap-4 grid-cols-2 md:grid-cols-3 2xl:grid-cols-6" aria-label="Indicadores">
         <KpiTile label="Medidores" count={d ? { to: d.meters.total, format: n => String(Math.round(n)) } : undefined} value="—" loading={!d}
           sub={d && (['NORMAL', 'WARNING', 'CRITICAL', 'UNKNOWN'] as MeterStatus[]).filter(s => d.meters.by_status[s]).map(s => <span key={s} className="flex items-center gap-1"><span className="num font-semibold text-foreground">{d.meters.by_status[s]}</span><StatusBadge status={s} compact /></span>)} />
-        <KpiTile label="Consumo del periodo" count={d ? { to: d.consumption.total_kwh, format: n => fmtKwh(n) } : undefined} value="—" loading={!d} sub={d && <>{period} · media {fmtKwh(d.consumption.avg_daily_kwh, 0)}/día</>} />
+        <KpiTile label="Consumo del periodo" count={d ? { to: d.consumption.total_kwh, format: n => fmtKwh(n, 0) } : undefined} value="—" loading={!d} sub={d && <>{period} · media {fmtKwh(d.consumption.avg_daily_kwh, 0)}/día</>} />
         <KpiTile label="Anomalías IA" count={d ? { to: d.anomalies.total, format: n => String(Math.round(n)) } : undefined} value="—" loading={!d}
           sub={d && (d.anomalies.total ? TYPE_ORDER.filter(t => d.anomalies.by_type[t]).map(t => <span key={t} className="flex items-center gap-1"><span className="num font-semibold text-foreground">{d.anomalies.by_type[t]}</span><TypeBadge type={t} compact short /></span>) : 'sin análisis ejecutado')} />
         <KpiTile label="Alta prioridad" count={d ? { to: d.anomalies.priority, format: n => String(Math.round(n)) } : undefined} value="—" loading={!d} tone={d?.anomalies.priority ? 'critical' : undefined} sub={d && (d.anomalies.priority ? 'requieren investigación' : 'nada pendiente')} />
