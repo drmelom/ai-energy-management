@@ -16,11 +16,13 @@ export function KpiTile({ label, value, count, sub, tone, loading }: {
     <Card className="min-w-0 gap-0 py-0 overflow-hidden">
       <CardContent className="px-4 pt-3 pb-4 rule-top border-t-foreground/80">
         <div className="eyebrow">{label}</div>
-        {loading ? <Skeleton className="h-9 w-28 mt-2" /> :
-          <div className={cn('display mt-2 break-words [font-size:clamp(22px,2.1vw,32px)] leading-[1.1]', tone === 'critical' && 'text-critical-ink', tone === 'warning' && 'text-warning-ink')}>
-            {count ? <CountUp to={count.to} format={count.format} /> : value}
-          </div>}
-        {sub && <div className="text-xs text-muted-foreground mt-2 flex items-center gap-1.5 flex-wrap min-h-5">{sub}</div>}
+        <div className="mt-2 min-h-9 flex items-center">
+          {loading ? <Skeleton className="h-8 w-28" /> :
+            <div className={cn('display fade-in break-words [font-size:clamp(22px,2.1vw,32px)] leading-[1.1]', tone === 'critical' && 'text-critical-ink', tone === 'warning' && 'text-warning-ink')}>
+              {count ? <CountUp to={count.to} format={count.format} /> : value}
+            </div>}
+        </div>
+        <div className="text-xs text-muted-foreground mt-2 flex items-center gap-1.5 flex-wrap min-h-5">{loading ? <Skeleton className="h-3 w-24" /> : sub}</div>
       </CardContent>
     </Card>
   );

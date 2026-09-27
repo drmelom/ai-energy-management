@@ -161,6 +161,6 @@ h1, h2, h3, [data-slot="card-title"] { font-family: var(--font-display); font-va
 @keyframes rise { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: none } }
 @media (prefers-reduced-motion: reduce) { .stagger > * { animation: none; } }
 .clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
-.fade-in { animation: fade .2s ease-out; }
+.fade-in { animation: fade .35s ease-out; }
 @keyframes fade { from { opacity: 0; transform: translateY(2px) } to { opacity: 1; transform: none } }
 @media (prefers-reduced-motion: reduce) { .fade-in, .animate-spin, .animate-pulse { animation: none; } }

@@ -15,7 +15,7 @@ export function FleetRanking({ rows, hasRun }: { rows: MeterListItem[]; hasRun: 
   const sorted = [...rows].sort(bySeverity);
   const max = Math.max(1, ...sorted.map(r => Math.abs(r.variation_pct)));
   return (
-    <Card className="gap-0 py-0 overflow-hidden">
+    <Card className="gap-0 py-0 overflow-hidden fade-in">
       <CardHeader className="px-5 pt-5 pb-3 flex-row items-baseline justify-between">
         <div>
           <CardTitle className="text-lg">Desvío frente al baseline por medidor</CardTitle>
