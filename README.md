@@ -12,6 +12,7 @@ MVP end-to-end para gestionar medidores eléctricos y usar IA para **detectar, e
 | IA | **Jev** (TypeSafe AI, modelo de decisión) para clasificar · LLM vía OpenRouter para redactar · fallbacks deterministas (reglas y plantillas) |
 | Frontend | Vite · React 19 · TypeScript · Tailwind CSS v4 · Recharts 3 · react-router |
 | Tests | pytest (41 tests, sin red, < 5 s) · GitHub Actions · Docker |
+| Docs | [ARCHITECTURE.md](backend/ARCHITECTURE.md) · [DATA_ANALYSIS.md](docs/DATA_ANALYSIS.md) · [DATA_VIZ.md](docs/DATA_VIZ.md) · [CASOS_NEGOCIO.md](docs/CASOS_NEGOCIO.md) · Swagger `/docs` |
 
 ## Arranque en 3 comandos
 
@@ -34,7 +35,7 @@ cd backend && uv run pytest
 
 Abrir <http://localhost:5173> · login demo `admin` / `admin` · Swagger en <http://localhost:8000/docs>.
 
-**Sin claves de API el sistema funciona completo** en modo `rules` + `template` (el badge del header lo indica). Para usar los proveedores reales, en `backend/.env`:
+**Sin claves de API el sistema funciona completo** en modo `rules` + `template` (`GET /health` reporta los proveedores activos y cada anomalía guarda quién la decidió en `ai_meta`). Para usar los proveedores reales, en `backend/.env`:
 
 ```dotenv
 OPENROUTER_API_KEY=sk-or-...   # una sola clave: Jev (typesafe/jev-1.13) + LLM (modelos :free) salen de OpenRouter
@@ -60,7 +61,7 @@ UI en <http://localhost:8080> (nginx sirve el build y proxifica `/api` al backen
 
 1. **Login** → **Dashboard**: 6 KPIs y ranking de flota ordenado por urgencia. M-109 y M-112 en las dos primeras filas.
 2. **Medidores** → filtro *Crítico* → **M-109**: consumo horario con baseline y banda ±25 % (el umbral del detector); el salto sale de la banda a las 14:00 del 12/09 con la bandera del evento `UNKNOWN`; abajo, el factor de potencia cae a la zona roja.
-3. **Ejecutar análisis IA**: timeline de 7 etapas en vivo (Lecturas → … → Recomendación) con el detalle de cada una y quién decidió/explicó cada caso.
+3. **Ejecutar análisis IA**: timeline de 7 etapas en vivo (Lecturas → … → Recomendación) con el detalle de cada una y quién decidió/explicó cada caso. **Pipeline IA** (`/pipeline`, datos de `GET /ai/graph`): el grafo LangGraph nodo a nodo con qué entra, qué sale y la latencia real de cada etapa en el último run.
 4. **Anomalías IA**: tabla priorizada. M-109 *Anomalía real · Alta*, M-112 *Calidad de dato · Alta*, M-104 *Explicable · Media*, M-106 *Falso positivo · Baja*.
 5. **Investigar** M-109: qué encontró la IA, evidencia con cifras, antes/después, distribución de probabilidad de Jev, eventos relacionados y **acción recomendada** → marcar en revisión / resolver.
 6. **M-112**: consumo plano dentro de la banda pero tensión en diente de sierra y PF a 0,58 cada 3 h → problema de medida, no de consumo.
@@ -82,7 +83,7 @@ Resultado con el dataset entregado (test de regresión, no aspiración): 4 anoma
 
 ## API
 
-`GET /meters` · `GET /meters/{id}` · `GET /meters/{id}/readings?resolution=hourly|daily&include_baseline=true` · `GET /meters/{id}/events` · `GET /events` · `GET /anomalies` · `GET /anomalies/{id}` · `PATCH /anomalies/{id}` · `POST /ai/analyze` · `GET /ai/analysis` · `GET /ai/analysis/{id}` · `GET /dashboard/summary` · `GET /health` · `POST /auth/login`. Contrato completo en [backend/ARCHITECTURE.md §4](backend/ARCHITECTURE.md).
+`GET /meters` · `GET /meters/{id}` · `GET /meters/{id}/readings?resolution=hourly|daily&include_baseline=true` · `GET /meters/{id}/events` · `GET /events` · `GET /anomalies` · `GET /anomalies/{id}` · `PATCH /anomalies/{id}` · `POST /ai/analyze` · `GET /ai/analysis` · `GET /ai/analysis/{id}` · `GET /ai/graph` · `GET /dashboard/summary` · `GET /health` · `POST /auth/login`. Contrato completo en [backend/ARCHITECTURE.md §4](backend/ARCHITECTURE.md).
 
 ## Estructura
 
@@ -91,12 +92,12 @@ backend/app/
   analytics/   baseline, detectores, correlación, evidencia  (pandas puro, sin IO)
   ai/          puertos + adaptadores: jev, rules, openrouter, templates, factory
   pipeline/    LangGraph: estado, 7 nodos, grafo lineal
-  services/    AnalysisRunner (asyncio.Task, progreso persistido), meters, anomalies, dashboard
+  services/    AnalysisRunner (asyncio.Task, progreso persistido, caché ai_cache), data, meters, anomalies, dashboard
   routers/     HTTP
   models.py · schemas.py · seed.py · db.py · config.py · main.py
-backend/tests/ detectores (sintéticos + CSV reales), proveedores, API + pipeline end-to-end
-frontend/src/  api/ (cliente tipado) · lib/ (semántica, formato, shaping) · components/ (17) · pages/ (7)
-docs/          DATA_ANALYSIS.md (EDA con umbrales validados) · DATA_VIZ.md (spec visual) · enunciado
+backend/tests/ detectores (sintéticos + CSV reales), proveedores, API + pipeline end-to-end, escalabilidad (60 medidores × 30 días)
+frontend/src/  api/ (cliente tipado) · lib/ (semántica, formato, motion) · components/ (shadcn/ui + 15 propios) · pages/ (8)
+docs/          DATA_ANALYSIS.md (EDA con umbrales validados) · DATA_VIZ.md (spec visual) · CASOS_NEGOCIO.md (los 4 casos desde el negocio) · enunciado
 ```
 
 Patrón: **capas simples** (router → service → SQLAlchemy) con **un único puerto explícito** en la frontera de IA (`DecisionProvider`, `ExplanationProvider`). Justificación y alternativas rechazadas en [backend/ARCHITECTURE.md §1](backend/ARCHITECTURE.md).

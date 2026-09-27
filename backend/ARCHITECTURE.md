@@ -5,6 +5,8 @@
 
 Este documento es la referencia de implementación y el guion de defensa en entrevista. Cada decisión lleva su "por qué" en una o dos frases; si una sección no se puede explicar en 30 segundos, está mal escrita.
 
+> **Estado final vs. diseño.** El documento se escribió antes de implementar y se mantuvo como referencia. Lo que cambió al construir: (1) sexta tabla `ai_cache` (respuestas de IA por hash de evidencia; `force_refresh=true` por defecto para que la demo llame a los proveedores en vivo); (2) ruta extra `GET /ai/graph` que expone nodos, aristas y Mermaid del grafo LangGraph para la página *Pipeline IA*; (3) la confianza se compone en código a partir de las tres certezas de Jev (§7.2) y la UI muestra el desglose; (4) los tests quedaron en cuatro ficheros (§9), incluido uno de escalabilidad con 60 medidores × 30 días y anomalías inyectadas; (5) la UI no muestra nombres de modelo ni proveedor: `ai_meta` y `/health` los siguen registrando para la API; (6) `APP_ENV` se eliminó por no usarse; `services/data.py` concentra la carga de DataFrames desde SQLite.
+
 ---
 
 ## 0. Resumen ejecutivo (para abrir la entrevista)
@@ -61,7 +63,7 @@ backend/
 │   ├── main.py                 # create_app(): lifespan (create_all + seed), CORS, request-id middleware, routers, exception handlers
 │   ├── config.py               # Settings (pydantic-settings) + get_settings()
 │   ├── db.py                   # engine SQLite, SessionLocal, Base, get_db() dependency
-│   ├── models.py               # 5 tablas SQLAlchemy: Meter, Reading, Event, AnalysisRun, Anomaly
+│   ├── models.py               # 6 tablas SQLAlchemy: Meter, Reading, Event, AnalysisRun, Anomaly, AiCache
 │   ├── schemas.py              # Pydantic de entrada/salida = contrato API (sección 4)
 │   ├── errors.py               # AppError(code, status, message) + handlers → JSON de error uniforme
 │   ├── seed.py                 # CSV → tablas si la BD está vacía; idempotente
@@ -70,13 +72,14 @@ backend/
 │   │   ├── meters.py           # GET /meters, /meters/{id}, /meters/{id}/readings, /meters/{id}/events
 │   │   ├── events.py           # GET /events
 │   │   ├── anomalies.py        # GET /anomalies, GET/PATCH /anomalies/{id}
-│   │   ├── analysis.py         # POST /ai/analyze, GET /ai/analysis, GET /ai/analysis/{id}
+│   │   ├── analysis.py         # POST /ai/analyze, GET /ai/analysis, GET /ai/analysis/{id}, GET /ai/graph
 │   │   └── dashboard.py        # GET /dashboard/summary, GET /health
 │   ├── services/
 │   │   ├── meters.py           # listado con filtros/orden, detalle, lecturas con resolución + baseline en lectura
 │   │   ├── anomalies.py        # consulta por run, detalle con evidencia, cambio de estado
 │   │   ├── dashboard.py        # agregados del resumen
-│   │   └── analysis.py         # AnalysisRunner: idempotencia, asyncio.Task, persistencia de progreso y resultados
+│   │   ├── data.py             # SQLite → DataFrames / baseline (compartido por pipeline y lecturas)
+│   │   └── analysis.py         # AnalysisRunner: idempotencia, asyncio.Task, persistencia de progreso, SqliteAiCache
 │   ├── analytics/              # pandas puro; sin IO, sin IA
 │   │   ├── baseline.py         # perfil horario por medidor (mediana/σ por hora, días 1–7)
 │   │   ├── detectors.py        # segmentos de consumo + señales de calidad de dato; umbrales en dataclass Thresholds
@@ -95,12 +98,10 @@ backend/
 │       └── factory.py          # build_providers(settings) → encadena adaptador real + fallback
 └── tests/
     ├── conftest.py             # app de test con SQLite temporal + seed real, providers fake, series sintéticas
-    ├── test_detectors.py       # unit: baseline, segmentos, señales DQ sobre series sintéticas
-    ├── test_correlation.py     # unit: ventana de eventos, tipos que explican / no explican
-    ├── test_rules.py           # unit: clasificador por reglas y tabla de confianza
-    ├── test_pipeline_ground_truth.py  # integración: CSV reales → exactamente los 4 casos, 0 en los otros 8, M-109 primero
-    ├── test_providers.py       # adaptador Jev con cliente stub; validador anti-cifras-inventadas del LLM; fallbacks
-    └── test_api.py             # TestClient: contrato de cada endpoint, errores, idempotencia de /ai/analyze
+    ├── test_detectors.py       # unit + ground truth: baseline, segmentos, señales DQ (sintéticos) y los 4 casos sobre los CSV reales, 0 en los otros 8
+    ├── test_providers.py       # reglas, guardrails, adaptador Jev (estado en inglés), validador anti-cifras del LLM, fallbacks, settings
+    ├── test_api.py             # TestClient: contrato de cada endpoint, errores, run completo de 7 etapas, ranking, PATCH, caché
+    └── test_scalability.py     # 60 medidores × 30 días sintéticos con 12 anomalías inyectadas: todas detectadas, 0 falsos positivos
 ```
 
 30 ficheros. Explicación en 30 segundos: *routers reciben HTTP, services hablan con la BD, analytics es matemática pura, pipeline la orquesta, ai habla con el exterior y siempre tiene plan B.*
@@ -372,6 +373,8 @@ Idempotente ante doble clic: nunca hay dos runs simultáneos (sección 5.5).
 **`GET /ai/analysis?limit=5`** → `200 { "items": [AnalysisRun sin stages] }`, más reciente primero. El frontend lo usa al cargar para saber si hay un run en curso y retomar el polling.
 
 Polling recomendado: cada 700 ms mientras `status ∈ {QUEUED, RUNNING}`.
+
+**`GET /ai/graph`** → `200 { "nodes": [{ "key", "label", "kind": "data|analytics|ai|ranking", "input", "output", "decides" }], "edges": [{ "from", "to" }], "mermaid": "…" }`. Se construye con `graph.get_graph()` de LangGraph más la documentación de cada nodo; alimenta la página *Pipeline IA* de la demo.
 
 ### 4.5 Dashboard y salud
 
@@ -738,7 +741,6 @@ Cada `Anomaly.ai_meta` guarda `decision_provider`, `explanation_provider`, las t
 ```python
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
-    app_env: Literal["development","test","production"] = "development"
     log_level: str = "INFO"
     cors_origins: list[str] = ["http://localhost:5173"]       # coma-separado en env
     database_url: str = "sqlite:///./energy.db"
@@ -763,7 +765,6 @@ class Settings(BaseSettings):
 
 ```dotenv
 # --- Server ---
-APP_ENV=development
 LOG_LEVEL=INFO
 CORS_ORIGINS=http://localhost:5173
 DATABASE_URL=sqlite:///./energy.db
@@ -798,14 +799,12 @@ Los umbrales analíticos **no** están aquí a propósito (sección 6): son part
 
 | Nivel | Fichero | Qué se prueba | Cómo |
 |---|---|---|---|
-| Unit | `test_detectors.py` | `hourly_profile` (mediana por hora, ventana 7 días); `detect_segments` en series sintéticas: ruido ±5 % → 0 segmentos; escalón +40 % desde la hora 200 → 1 segmento con inicio exacto; caída −80 % de 12 h → 1 segmento de 12 h; racha de 5 h → 0 (umbral 6); señales DQ: saltos de ±20 V inyectados → S1+S2; residuo con signo alterno → S3; residuo con sesgo constante → no S3 | fixture `synthetic_meter(profile, noise, inject=...)` que genera 336 h con perfil diurno |
-| Unit | `test_correlation.py` | ventana ±24 h; `SCHEDULED_OUTAGE` explica bajadas pero no subidas; `UNKNOWN` nunca explica; `DATA_QUALITY` corrobora; `DURATION_MATCH` parsea "12 hours" | candidatos construidos a mano |
-| Unit | `test_rules.py` | tabla tipo/severidad/prioridad de 7.3 y confianza acotada; guardrails G1/G2 con `Decision` de un Jev falso que contradice la evidencia | `FakeDecisionProvider(returns=...)` |
-| Unit | `test_providers.py` | adaptador Jev con cliente stub: mapeo argmax/confianza/Noul, timeout → fallback con nota; adaptador LLM: validador acepta «110,3 %», rechaza «115 %» y textos vacíos; `WithFallback` registra notas | stubs `httpx`/objetos falsos, sin red |
-| Integración | `test_pipeline_ground_truth.py` | `build_graph().ainvoke` sobre los CSV reales con proveedores fallback: exactamente 4 anomalías; `{M-104: (EXPLAINABLE, MEDIUM), M-106: (FALSE_POSITIVE, LOW), M-109: (REAL, HIGH), M-112: (DATA_QUALITY, HIGH)}`; `ranked[0].meter_id == "M-109"`; `priority_count == 2`; los otros 8 ausentes; headline exacto | es **el** test de regresión del método |
-| API | `test_api.py` | TestClient sobre SQLite temporal con seed real: contrato de cada endpoint (shape, filtros, orden, 404, 400 rango invertido, 422); `POST /ai/analyze` dos veces seguidas → mismo id y `reused=true`; polling hasta COMPLETED y `GET /anomalies` coherente; `PATCH` estado y carry-over tras segundo run; `/health` reporta `rules/template` | `AnalysisRunner.wait(run_id)` (expone el `Task`) evita `sleep` en tests |
+| Unit + ground truth | `test_detectors.py` (12) | series sintéticas: ruido → 0 hallazgos, escalón con ventana exacta, pico corto ignorado, ruido eléctrico intermitente → calidad de dato y no consumo; CSV reales: M-104 explicado por `OPERATIONAL_CHANGE`, M-106 coincide con la duración declarada, M-109 evidencia real, M-112 DQ sin anomalía de consumo, solo los 4 casos tienen hallazgos, los 8 normales guardan margen a los umbrales, `variation_pct` reproduce la definición del PDF, evidencia bilingüe | fixtures sintéticas + `data/*.csv` |
+| Unit | `test_providers.py` (9) | reglas reproducen la ground truth; guardrails G1/G2; estado Jev en inglés con señales ausentes; validador anti-cifras (acepta 110,3 %, rechaza 115 %, rechaza que «0,94» legitime «94»); fallback de decisión con nota y reintento solo cuando es retryable; fallback de explicación; plantillas sin placeholders; `build_providers` sin claves = offline; settings CSV | clientes stub, sin red |
+| API | `test_api.py` (15) | TestClient sobre SQLite temporal con seed real: login, medidores antes/después del run, filtros y estado, lecturas diarias con baseline, eventos, run completo de 7 etapas, ranking ground truth (M-109 primero, 2 prioritarias), detalle con evidencia y `ai_meta`, `PATCH` estado y carry-over, dashboard, `/health`, formato de error + request-id, caché reutiliza respuestas | `AnalysisRunner.wait(run_id)` evita `sleep` |
+| Escalabilidad | `test_scalability.py` (5) | 60 medidores × 30 días sintéticos (10× el dataset) con 12 anomalías inyectadas de los 4 tipos: todas detectadas con el tipo correcto, severidad/prioridad coherentes, 0 falsos positivos en los sanos, analítica en tiempo acotado | generador sintético con semilla |
 
-Con clave real, `pytest -m live` (marcado, opcional) ejecuta el pipeline con Jev/LLM y asserta lo mismo salvo la confianza exacta. No corre en CI.
+41 tests, sin red, < 5 s. Los proveedores reales (Jev/LLM) se validaron manualmente contra la API desplegada; no corren en CI.
 
 ---
 
