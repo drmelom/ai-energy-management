@@ -24,14 +24,14 @@ export default function Anomalies() {
   const q = useQuery(() => api.anomalies({ severity: severity === 'ALL' ? undefined : severity, type: type === 'ALL' ? undefined : type, priority: priority || undefined }), [severity, type, priority, version]);
 
   const cols: Col<AnomalySummary>[] = [
-    { key: 'rank', header: '#', width: '40px', render: r => <span className="text-muted-foreground num">{r.rank}</span> },
-    { key: 'meter', header: 'Medidor', render: r => <Link to={`/meters/${r.meter_id}`} className="text-foreground"><div className="font-semibold">{r.meter_id}</div><div className="text-xs text-muted-foreground">{r.meter_name}</div></Link> },
-    { key: 'type', header: 'Tipo', render: r => <TypeBadge type={r.type} /> },
-    { key: 'severity', header: 'Severidad', render: r => <SeverityBadge severity={r.severity} priority={r.priority} /> },
-    { key: 'confidence', header: 'Confianza', render: r => <ConfidenceBar confidence={r.confidence} parts={r.confidence_parts} /> },
-    { key: 'reason', header: 'Hallazgo', render: r => <span className="clamp-1 text-muted-foreground min-w-[240px] max-w-[520px] block" title={r.reason}>{r.reason}</span> },
-    { key: 'status', header: 'Estado', render: r => <AnomalyStatusChip status={r.status} /> },
-    { key: 'action', header: 'Acción', align: 'right', render: r => <Button variant="outline" size="sm" nativeButton={false} render={<Link to={`/anomalies/${r.id}`} />}>Investigar →</Button> },
+    { key: 'rank', header: '#', width: '36px', render: r => <span className="text-muted-foreground num">{r.rank}</span> },
+    { key: 'meter', header: 'Medidor', width: '140px', render: r => <Link to={`/meters/${r.meter_id}`} className="text-foreground"><div className="font-semibold">{r.meter_id}</div><div className="text-xs text-muted-foreground">{r.meter_name}</div></Link> },
+    { key: 'type', header: 'Tipo', width: '150px', render: r => <TypeBadge type={r.type} /> },
+    { key: 'severity', header: 'Severidad', width: '104px', render: r => <SeverityBadge severity={r.severity} priority={r.priority} /> },
+    { key: 'confidence', header: 'Confianza', width: '176px', render: r => <ConfidenceBar confidence={r.confidence} parts={r.confidence_parts} /> },
+    { key: 'reason', header: 'Hallazgo', render: r => <span className="block truncate text-muted-foreground" title={r.reason}>{r.reason}</span> },
+    { key: 'status', header: 'Estado', width: '104px', render: r => <AnomalyStatusChip status={r.status} /> },
+    { key: 'action', header: 'Acción', align: 'right', width: '128px', render: r => <Button variant="outline" size="sm" nativeButton={false} render={<Link to={`/anomalies/${r.id}`} />}>Investigar →</Button> },
   ];
 
   return (
@@ -49,7 +49,7 @@ export default function Anomalies() {
       </FilterBar>
       {q.error ? <p className="text-critical-ink">{q.error.message}</p> : q.data ?
         <div className={q.loading ? 'opacity-50' : ''}>
-          <DataTable columns={cols} rows={q.data.items} rowKey={r => r.id} rowClass={r => (r.priority ? 'shadow-[inset_3px_0_0_var(--critical)]' : '')}
+          <DataTable fixed columns={cols} rows={q.data.items} rowKey={r => r.id} rowClass={r => (r.priority ? 'shadow-[inset_3px_0_0_var(--critical)]' : '')}
             empty={q.data.run_id ? 'Ninguna anomalía coincide con el filtro' : 'Ejecuta el análisis IA para detectar anomalías'} />
         </div> : <Skeleton className="h-64 rounded-xl" />}
     </AppShell>
